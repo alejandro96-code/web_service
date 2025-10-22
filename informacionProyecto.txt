@@ -1,0 +1,39 @@
+http:
+
+
+socket:
+
+Un socket un punto de conexión que permite que dos programas se
+comuniquen entre sí a través de una red (o en la misma máquina).
+
+La funcion socket recibe 3 parametros:
+    - domain: utilizamos (AF_INET) para las direcion IPv4
+    - type: utilizamos (SOCK_STREAM) para utilziar el protocolo TCP (Protocolo de Control de Transmisión) 
+    - protocol: utilizamos el 0 para que lo coga autamtico,(podriamos poner IPPROTO_TCP) para TCP
+
+Lo que hacemos es crear una coxion parecida a: TCP connection on 0.0.0.0:8080
+
+
+setsockopt:
+Es una funcion que utilizamos para reusar el puerto nada mas cerrarlo
+Sin esta funcion el puerto quedaria ocupado durante unos 30 segundos despues de cerrarlo
+
+    5 parametros
+        server: el servidor creado antes
+        SOL_SOCKET: el nivel del socket
+        SO_REUSEADDR: utilizamos eta funcion para reusar el socket
+        opt: puntero para la activacion
+        sizeof(opt) el tamaño del valor de la activacion
+
+bind:
+Se utiliza para vincular el localhost al puerto 8080
+    3 parametros:
+    server: el socket que hemos creado
+    direccion: la ip y el puerto donde escucha
+    tamaño: Cuantos bytes ocupa la estructura
+
+    para crear la direccion usamos una estructura y asignamos los siguietne datos
+    AD_INET para usar el IPv4
+    INADDR_ANY para que escuche todas las interfaces (WiFi, ethernet, localhost...)
+    htons(8080) para el puerto 8080
+
