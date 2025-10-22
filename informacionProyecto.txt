@@ -28,12 +28,16 @@ Sin esta funcion el puerto quedaria ocupado durante unos 30 segundos despues de 
 bind:
 Se utiliza para vincular el localhost al puerto 8080
     3 parametros:
-    server: el socket que hemos creado
-    direccion: la ip y el puerto donde escucha
-    tamaño: Cuantos bytes ocupa la estructura
+        server: el socket que hemos creado
+        direccion: la ip y el puerto donde escucha
+        tamaño: Cuantos bytes ocupa la estructura
 
     para crear la direccion usamos una estructura y asignamos los siguietne datos
     AD_INET para usar el IPv4
     INADDR_ANY para que escuche todas las interfaces (WiFi, ethernet, localhost...)
     htons(8080) para el puerto 8080
 
+el listen se utiliza para escucahr las conexiones entrantes
+    2 paramentros:
+        server: el socket que hemos creado
+        conexion: la conexiones simultaneas que puede recibir 
