@@ -1,10 +1,18 @@
 # Variables
-NAME = server
+NAME = webserv
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-SRCS = main.cpp parseoConf.cpp
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -I includes
 
-OBJS = $(SRCS:.cpp=.o)
+# Directorios
+SRC_DIR = src
+OBJ_DIR = obj
+INC_DIR = includes
+
+# Archivos fuente
+SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/parseoConf.cpp $(SRC_DIR)/server.cpp
+
+# Archivos objeto (se guardarán en obj/)
+OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 # Colores
 GREEN = \033[0;32m
@@ -18,12 +26,13 @@ $(NAME): $(OBJS)
 	@$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
 	@echo "$(GREEN)¡Servidor compilado!$(RESET)"
 
-%.o: %.cpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(OBJ_DIR)
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	@echo "$(YELLOW)Limpiando archivos objeto...$(RESET)"
-	@rm -f $(OBJS)
+	@rm -rf $(OBJ_DIR)
 	@echo "$(GREEN)¡Archivos objeto Limpiados!$(RESET)"
 
 fclean: clean
