@@ -1,6 +1,60 @@
-http:
+HTTP (HyperText Transfer Protocol) es un protocolo de petición-respuesta:
+
+Cliente (navegador) hace una petición (Request)
+Servidor (webserv) envía una respuesta (Response)
+
+Estructura de una request:
+    GET /index.html HTTP/1.1        Línea de petición
+    Host: localhost:8080            Headers (cabeceras)
+    User-Agent: Mozilla/5.0         Headers (cabeceras)
+    Accept: text/html               Headers (cabeceras)
+
+    [cuerpo opcional]               Body (solo en POST/PUT)
+
+Linea de una request:
+    Método: GET, POST, DELETE, etc.
+    Path (ruta): index.html, /upload, /images/logo.png
+    Versión: HTTP/1.1
+
+Headers (Cabeceras)
+    Host:               servidor y puerto
+    User-Agent:         navegador que hace la petición
+    Accept:             tipos de contenido que acepta
+    Content-Length:     tamaño del body (en POST)
+    Content-Type:       tipo de contenido que envía (en POST)
+
+Body (Cuerpo)
+    Datos de formulario
+    Archivos subidos
+    JSON, XML, etc.
+
+Los 3 metodos a usar en este proyecto son:
+    GET - Obtener un recurso
+    POST - Enviar datos al servidor
+    DELETE - Eliminar un recurso
+
+Otros métodos (opcional):
+    PUT: Reemplazar/actualizar un recurso
+    HEAD: Como GET pero solo pide los headers
+    OPTIONS: Preguntar qué métodos están permitidos
+
+Codigos de Estado:
+Los codigos de estados son codigo que definen el resultado de una peticion
+    200 OK: Todo bien, aquí está tu contenido
+    201 Created: Recurso creado exitosamente
+    204 No Content: Éxito pero sin contenido
+    301 Moved Permanently: El recurso se movió permanentemente
+    302 Found: Redirección temporal
+    400 Bad Request: Petición malformada
+    403 Forbidden: No tienes permiso
+    404 Not Found: El archivo no existe
+    405 Method Not Allowed: Método no permitido para esta ruta
+    500 Internal Server Error: Error en el servidor
+    501 Not Implemented: Funcionalidad no implementada
+    503 Service Unavailable: Servidor no disponible
 
 
+Informacion del server.cpp
 socket:
 
 Un socket un punto de conexión que permite que dos programas se

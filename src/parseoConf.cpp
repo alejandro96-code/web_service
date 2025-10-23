@@ -1,6 +1,4 @@
 #include "parseoConf.hpp"
-#include <fstream>
-#include <sstream>
 
 // Función para leer el archivo de configuración
 std::map<std::string, std::string> leerConfig(const char* archivo) {

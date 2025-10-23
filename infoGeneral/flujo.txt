@@ -1,0 +1,47 @@
+FLUJO COMPLETO: Cliente → Servidor
+
+Paso 1: Cliente abre el navegador
+Usuario escribe en el navegador: http://localhost:8080/index.html
+
+Paso 2: El navegador crea una conexión TCP
+Esto es lo que hace accept() en tu servidor - acepta esa conexión
+
+Paso 3: El navegador ENVÍA texto (la Request)
+Una vez acpetada la conexion TCP, el navegador envía caracteres por el socket:
+
+GET /index.html HTTP/1.1\r\n
+Host: localhost:8080\r\n
+User-Agent: Mozilla/5.0\r\n
+Accept: text/html\r\n
+\r\n
+
+Paso 4: Tu servidor RECIBE el texto
+vamos al server.cpp a manejarCliente en ella hemos guardado un buffer de 4096 caracteres
+que es donde vamos a guardar lo que nos envíe el cliente.
+Llenamos el buffer de 0 usando memset para asegurarnos que esta vacio
+usando la funcion recv para recibir los datos de la peticion del cliente
+    client_fd = de qué conexión leer
+    buffer = dónde guardar lo que leemos
+    sizeof(buffer) - 1 = máximo a leer (4095 bytes)
+    bytes_read = cuántos bytes se leyeron realmente
+
+Es decir esto: GET /index.html HTTP/1.1\r\nHost: localhost:8080\r\n...
+usamos rawRequest para covertir el array en un std:string
+
+usamos un objeto llamado REQUEST para separar por lineas la rawRequest
+
+=== REQUEST ===
+Method: GET
+Path: /.well-known/appspecific/com.chrome.devtools.json
+Version: HTTP/1.1
+Headers:
+  Accept-Encoding: gzip, deflate, br, zstd
+  Accept-Language: es-ES,es;q=0.9,en;q=0.8
+  Connection: keep-alive
+  Host: localhost:8080
+  Sec-Fetch-Dest: empty
+  Sec-Fetch-Mode: no-cors
+  Sec-Fetch-Site: same-origin
+  User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+
+Si lo querriamos debugear tendriamos que ir a Network en nuestro navegador y lo veriamso en las peticiones

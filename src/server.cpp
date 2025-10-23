@@ -1,11 +1,5 @@
 #include "server.hpp"
-#include <iostream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <fstream>
-#include <sstream>
-#include <cstdlib>
+#include "Request.hpp"
 
 // Constructor
 Server::Server(const std::map<std::string, std::string>& config): _server_fd(-1)
@@ -102,11 +96,27 @@ void Server::manejarCliente(int client_fd)
 {
     std::cout << "Nueva conexión" << std::endl;
     
-    // Leer el archivo HTML configurado
+    // 1. Leer la petición del cliente
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, sizeof(buffer));
+    int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    
+    if (bytes_read <= 0) {
+        close(client_fd);
+        return;
+    }
+    
+    std::string rawRequest(buffer);
+    
+    // 2. Parsear la petición con nuestra clase Request
+    Request request(rawRequest);
+    request.print();  // Para ver qué recibimos (debug)
+    
+    // 3. Por ahora, siempre servimos index.html
     std::string ruta_html = _document_root + "/" + _index_file;
     std::string html = leerArchivoHTML(ruta_html);
     
-    // Construir respuesta HTTP
+    // 4. Construir respuesta HTTP
     std::string response = "HTTP/1.1 200 OK\r\n";
     response += "Content-Type: text/html\r\n\r\n";
     response += html;

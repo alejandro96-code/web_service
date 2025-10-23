@@ -1,8 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <string>
-#include <map>
+#include "webserv.hpp"
 
 // Clase para manejar el servidor web
 class Server {

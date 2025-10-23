@@ -9,7 +9,10 @@ OBJ_DIR = obj
 INC_DIR = includes
 
 # Archivos fuente
-SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/parseoConf.cpp $(SRC_DIR)/server.cpp
+SRCS = 	$(SRC_DIR)/main.cpp
+		$(SRC_DIR)/parseoConf.cpp
+		$(SRC_DIR)/server.cpp
+		$(SRC_DIR)/Request.cpp
 
 # Archivos objeto (se guardarán en obj/)
 OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))

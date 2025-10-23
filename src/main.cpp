@@ -1,6 +1,4 @@
-#include <iostream>
-#include <map>
-#include <string>
+#include "webserv.hpp"
 #include "parseoConf.hpp"
 #include "server.hpp"
 
