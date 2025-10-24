@@ -1,5 +1,6 @@
 #include "server.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 
 // Constructor
 Server::Server(const std::map<std::string, std::string>& config): _server_fd(-1)
@@ -112,16 +113,12 @@ void Server::manejarCliente(int client_fd)
     Request request(rawRequest);
     request.print();  // Para ver qué recibimos (debug)
     
-    // 3. Por ahora, siempre servimos index.html
-    std::string ruta_html = _document_root + "/" + _index_file;
-    std::string html = leerArchivoHTML(ruta_html);
+    // 3. Generar respuesta usando la clase Response
+    Response response(request, _document_root);
+    std::string httpResponse = response.toString();
     
-    // 4. Construir respuesta HTTP
-    std::string response = "HTTP/1.1 200 OK\r\n";
-    response += "Content-Type: text/html\r\n\r\n";
-    response += html;
-    
-    send(client_fd, response.c_str(), response.length(), 0);
+    // 4. Enviar respuesta al cliente
+    send(client_fd, httpResponse.c_str(), httpResponse.length(), 0);
     close(client_fd);
 }
 

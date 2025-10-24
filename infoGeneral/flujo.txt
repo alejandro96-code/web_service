@@ -45,3 +45,28 @@ Headers:
   User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
 
 Si lo querriamos debugear tendriamos que ir a Network en nuestro navegador y lo veriamso en las peticiones
+
+Paso 5: El servidor crea la response y se la envia al navegador
+Se utiliza el objeto response:
+
+entrariamos a procesar donde veriamos el metodo http que entra en la request
+GET, POST o DELETE si netra cualquier otro llamariamos al error 405 (metodo no encontrado)
+
+En el metodo GET:
+  se obtiene el path de la peticion y se contruye la rutaCompleta
+  vamos a leer archivo() para leer su contenido
+  si el archivo exite y tiene contenido:
+    extraemos la extension para saber que ontent type tenemos que enviar
+    asignamos el codigo 200 y body con el contenido
+  si el archivo ersta vacio o no exite devolvera un 404
+
+En el metodo POST:
+  obtenemos el path y comprobamos que sea upload
+  ESTO SE CAMBIARA A FUTURO
+  si no lo es devuelve 404
+
+En el metodo DELETE:
+ obtenemos el path y comprobamos que empiece por /files/
+
+
+
