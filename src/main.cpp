@@ -10,16 +10,19 @@ int main(int argc, char *argv[]) {
     }
     
     // Leer configuración del archivo proporcionado
-    std::map<std::string, std::string> config = leerConfig(argv[1]);
+    std::vector<ServerConfig> servers = leerConfig(argv[1]);
     
     // Verificar que se haya cargado la configuración correctamente
-    if (config.empty()) {
-        std::cerr << "Error: No se pudo cargar la configuración o el archivo está vacío" << std::endl;
+    if (servers.empty()) {
         return 1;
     }
     
-    // Crear e iniciar el servidor
-    Server servidor(config);
+    // Mostrar configuración parseada
+    std::cout << "Configuración cargada:" << std::endl;
+    std::cout << "  Número de servidores: " << servers.size() << std::endl << std::endl;
+    
+    // Crear e iniciar el servidor con la nueva configuración
+    Server servidor(servers[0]);
     servidor.iniciar();
     servidor.ejecutar();
     

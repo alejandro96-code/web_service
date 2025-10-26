@@ -3,18 +3,21 @@
 #include "Response.hpp"
 
 // Constructor
-Server::Server(const std::map<std::string, std::string>& config): _server_fd(-1)
+Server::Server(const ServerConfig& config): _server_fd(-1)
 {
-    _puerto = atoi(config.find("port")->second.c_str());
-    _backlog = atoi(config.find("backlog")->second.c_str());
-    _document_root = config.find("document_root")->second;
-    _index_file = config.find("index_file")->second;
+    _puerto = config.port;
+    _backlog = 3; // Valor por defecto
+    _document_root = config.root;
+    _index_file = config.index;
+    _server_name = config.server_name;
+    _error_pages = config.error_pages;
     
     std::cout << "Configuración cargada:" << std::endl;
     std::cout << "  Puerto: " << _puerto << std::endl;
-    std::cout << "  Backlog: " << _backlog << std::endl;
+    std::cout << "  Server name: " << _server_name << std::endl;
     std::cout << "  Document root: " << _document_root << std::endl;
-    std::cout << "  Index file: " << _index_file << std::endl << std::endl;
+    std::cout << "  Index file: " << _index_file << std::endl;
+    std::cout << "  Páginas de error: " << _error_pages.size() << std::endl << std::endl;
 }
 
 // Destructor

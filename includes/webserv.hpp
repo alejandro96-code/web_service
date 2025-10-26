@@ -22,4 +22,7 @@
 // CONSTANTES
 #define BUFFER_SIZE 4096
 
+// MENSAJES DE ERROR
+#define ERROR_NO_CARGAR "Error: NO se puede cargar"
+
 #endif
