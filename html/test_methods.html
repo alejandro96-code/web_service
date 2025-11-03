@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test de Métodos HTTP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>🧪 Test de Validación de Métodos HTTP</h1>
+        
+        <div class="alert alert-info">
+            <strong>Configuración actual:</strong>
+            <ul>
+                <li><code>/ (raíz)</code> - Permite: GET, POST</li>
+                <li><code>/uploads</code> - Permite: GET, POST, DELETE</li>
+                <li><code>/test</code> - Permite: solo GET</li>
+            </ul>
+        </div>
+        
+        <h2 class="mt-4">Pruebas</h2>
+        
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">✅ Debe funcionar</div>
+            <div class="card-body">
+                <p><strong>GET /test/</strong> - GET permitido en /test</p>
+                <a href="/test/" class="btn btn-sm btn-success">Probar</a>
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">❌ Debe fallar (405)</div>
+            <div class="card-body">
+                <p><strong>POST /test/</strong> - POST NO permitido en /test (solo GET)</p>
+                <button onclick="testPOST('/test/')" class="btn btn-sm btn-danger">Probar POST a /test/</button>
+                <div id="result1" class="mt-2"></div>
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header bg-danger text-white">❌ Debe fallar (405)</div>
+            <div class="card-body">
+                <p><strong>DELETE /test/archivo.txt</strong> - DELETE NO permitido en /test</p>
+                <button onclick="testDELETE('/test/file1.txt')" class="btn btn-sm btn-danger">Probar DELETE a /test/</button>
+                <div id="result2" class="mt-2"></div>
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">✅ Debe funcionar</div>
+            <div class="card-body">
+                <p><strong>GET /uploads/</strong> - GET permitido en /uploads</p>
+                <a href="/uploads/" class="btn btn-sm btn-success">Probar</a>
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">✅ Debe funcionar</div>
+            <div class="card-body">
+                <p><strong>POST /upload</strong> - POST permitido en raíz</p>
+                <a href="/formupload.html" class="btn btn-sm btn-success">Ir al formulario</a>
+            </div>
+        </div>
+        
+        <a href="/" class="btn btn-primary mt-3">🏠 Volver</a>
+    </div>
+    
+    <script>
+        function testPOST(path) {
+            fetch(path, {
+                method: 'POST',
+                body: 'test data'
+            })
+            .then(response => {
+                const result = document.getElementById('result1');
+                if (response.status === 405) {
+                    result.innerHTML = '<div class="alert alert-success">✅ Correcto! Retornó 405 Method Not Allowed</div>';
+                } else {
+                    result.innerHTML = '<div class="alert alert-danger">❌ Error! Retornó ' + response.status + ' (esperaba 405)</div>';
+                }
+            });
+        }
+        
+        function testDELETE(path) {
+            fetch(path, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                const result = document.getElementById('result2');
+                if (response.status === 405) {
+                    result.innerHTML = '<div class="alert alert-success">✅ Correcto! Retornó 405 Method Not Allowed</div>';
+                } else {
+                    result.innerHTML = '<div class="alert alert-danger">❌ Error! Retornó ' + response.status + ' (esperaba 405)</div>';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
