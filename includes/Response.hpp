@@ -25,6 +25,7 @@ protected:
     bool metodoPermitido(const std::string& path, const std::string& method);
     Location* obtenerLocation(const std::string& path);
     void respuestaError(int codigo);
+    std::string normalizarPath(const std::string& path);
 
 public:
     Response(const Request& request, const std::string& documentRoot, 

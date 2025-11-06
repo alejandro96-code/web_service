@@ -3,17 +3,7 @@
 // Manejar peticiones GET
 void Response::manejarGET(const Request& request)
 {
-    std::string path = request.getPath();
-    
-    // Rutas de prueba para errores (pueden eliminarse en producción)
-    if (path == "/test-500") {
-        respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
-        return;
-    }
-    if (path == "/test-403") {
-        respuestaError(HttpStatus::FORBIDDEN);
-        return;
-    }
+    std::string path = normalizarPath(request.getPath());
     
     // Construir la ruta completa al archivo/directorio
     std::string rutaCompleta = _documentRoot + path;

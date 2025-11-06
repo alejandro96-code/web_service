@@ -167,3 +167,34 @@ void Response::respuestaError(int codigo)
     _body = html.str();
     _headers["Content-Type"] = "text/html";
 }
+
+// Normalizar path eliminando barras duplicadas
+std::string Response::normalizarPath(const std::string& path)
+{
+    if (path.empty()) {
+        return "/";
+    }
+    
+    std::string resultado;
+    resultado.reserve(path.length());
+    
+    bool ultimaFueBarra = false;
+    for (size_t i = 0; i < path.length(); i++) {
+        if (path[i] == '/') {
+            if (!ultimaFueBarra) {
+                resultado += '/';
+                ultimaFueBarra = true;
+            }
+        } else {
+            resultado += path[i];
+            ultimaFueBarra = false;
+        }
+    }
+    
+    // Asegurar que empiece con /
+    if (resultado.empty() || resultado[0] != '/') {
+        resultado = "/" + resultado;
+    }
+    
+    return resultado;
+}
