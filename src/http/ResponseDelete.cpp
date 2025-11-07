@@ -8,8 +8,8 @@ void Response::manejarDELETE(const Request& request)
 {
     std::string path = request.getPath();
     
-    // Solo permitir eliminar archivos en /uploads/
-    if (path.find("/uploads/") == 0) {
+    // Solo permitir eliminar archivos en /autoindex/
+    if (path.find("/autoindex/") == 0) {
         // Construir ruta completa al archivo
         std::string rutaCompleta = _documentRoot + path;
         
@@ -47,13 +47,13 @@ void Response::manejarDELETE(const Request& request)
                  << "<body><h1>🗑️ Archivo eliminado exitosamente</h1>\n"
                  << "<p>Archivo: <strong>" << path << "</strong></p>\n"
                  << "<a href=\"/\" class=\"btn\">Volver al inicio</a>\n"
-                 << "<a href=\"/uploads/\" class=\"btn\">Ver archivos restantes</a>\n"
+                 << "<a href=\"/autoindex/\" class=\"btn\">Ver archivos restantes</a>\n"
                  << "</body></html>";
         
         _body = response.str();
     }
     else {
-        // Solo se pueden eliminar archivos en /uploads/
+        // Solo se pueden eliminar archivos en /autoindex/
         respuestaError(HttpStatus::FORBIDDEN);
     }
 }

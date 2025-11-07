@@ -43,7 +43,7 @@
                 return;
             }
             
-            fetch('/uploads/' + filename, {
+            fetch('/autoindex/' + filename, {
                 method: 'DELETE'
             })
             .then(response => response.text())
@@ -59,7 +59,7 @@
         // Aquí deberías cargar dinámicamente los archivos
         // Por ahora mostramos un mensaje
         document.getElementById('fileList').innerHTML = 
-            '<div class="alert alert-warning">Visita <a href="/uploads/">/uploads/</a> para ver los archivos con autoindex</div>';
+            '<div class="alert alert-warning">Visita <a href="/autoindex/">/autoindex/</a> para ver los archivos con autoindex</div>';
     </script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
