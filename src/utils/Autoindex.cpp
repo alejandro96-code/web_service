@@ -6,7 +6,14 @@
 #include <fstream>
 #include <sstream>
 
-// Verificar si una ruta es un directorio
+/*
+    Verificar si una ruta es un directorio
+    creamos una estructura stat y hacemos una llamada al sistema
+    si nos devuelve un valor diferente a 0 significa que ha habido un error
+    de lo contrario  usamos S_ISDIR (macro del stat) con la info de la llamada
+    que nos devolvera true.
+    Asi distinguimos entre archivo y directorios.
+*/
 bool Autoindex::esDirectorio(const std::string& ruta)
 {
     struct stat info;
@@ -16,25 +23,33 @@ bool Autoindex::esDirectorio(const std::string& ruta)
     return S_ISDIR(info.st_mode);
 }
 
-// Obtener lista de archivos y directorios
+/*
+    aqui lo que queremos es listar los Directorios.
+    Creamos un contenedor vector para guardar los archivos
+    tambien uan variable dir que usaremos pra abrir el directorio devolviendo un puntero,
+    y una estructura dirent*
+    Si no existe el directorio nos devuelve los archivos solo.
+    Hacemos un bucle iterado donde si no es NULL leemos el siguiente directorio y archivos
+    saltamos el directorio actual y el padre para que no se dupliquen
+    y si es un directorio añadimos una "/" y si no lo mostramos tal cual
+    cerramos el directorio y lo retornamos
+*/
 std::vector<std::string> Autoindex::listarDirectorio(const std::string& ruta)
 {
-    std::vector<std::string> archivos; //contenedor de los resultados
+    std::vector<std::string> archivos;
     DIR* dir = opendir(ruta.c_str());
     
     struct dirent* entrada;
     if (dir == NULL)
         return archivos;
     
-    while ((entrada = readdir(dir)) != NULL) {
+    while ((entrada = readdir(dir)) != NULL)
+    {
         std::string nombre = entrada->d_name;
-        
-        // Saltar "." (directorio actual) y ".." (directorio padre)
         if (nombre == "." || nombre == "..") {
             continue;
         }
         
-        // Verificar si es un directorio
         std::string rutaCompleta = ruta + "/" + nombre;
         if (esDirectorio(rutaCompleta)) {
             archivos.push_back(nombre + "/");
@@ -42,7 +57,6 @@ std::vector<std::string> Autoindex::listarDirectorio(const std::string& ruta)
             archivos.push_back(nombre);
         }
     }
-    
     closedir(dir);
     return archivos;
 }
