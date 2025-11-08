@@ -62,7 +62,6 @@ void Response::manejarGET(const Request& request)
     if (puntoPos != std::string::npos) {
         extension = path.substr(puntoPos);
     }
-    
     _statusCode = HttpStatus::OK;
     _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
     _headers["Content-Type"] = obtenerContentType(extension);
