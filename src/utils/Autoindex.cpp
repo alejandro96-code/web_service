@@ -103,7 +103,7 @@ std::string Autoindex::generarHTML(const std::string& rutaDirectorio, const std:
     }
     
     // Leer el template HTML
-    std::ifstream templateFile("html/autoindex.html");
+    std::ifstream templateFile("templates/autoindex.html");
     std::string htmlTemplate;
     
     if (!templateFile.is_open()) {

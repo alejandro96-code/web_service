@@ -4,7 +4,12 @@
 #include <sstream>
 #include <ctime>
 
-// Manejar peticiones POST
+// 
+/*
+    Peticion POST:
+    Se usa principalmente para enviar datos a un servidor para crear o actualizar un recurso.
+
+*/
 void Response::manejarPOST(const Request& request)
 {
     std::string path = request.getPath();
@@ -56,25 +61,41 @@ void Response::manejarPOST(const Request& request)
         file.write(body.c_str(), body.length());
         file.close();
         
+        // Leer el template HTML de éxito
+        std::ifstream templateFile("templates/goodpost.html");
+        std::string htmlTemplate;
+        
+        if (!templateFile.is_open()) {
+            respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
+            return;
+        }
+        
+        // Leer el contenido del template
+        std::stringstream buffer;
+        buffer << templateFile.rdbuf();
+        htmlTemplate = buffer.str();
+        templateFile.close();
+        
+        // Reemplazar placeholders
+        size_t pos;
+        
+        // Reemplazar {{FILENAME}}
+        while ((pos = htmlTemplate.find("{{FILENAME}}")) != std::string::npos) {
+            htmlTemplate.replace(pos, 12, filename.str());
+        }
+        
+        // Reemplazar {{PATH}}
+        std::string filePath = "/autoindex/archivosSubidos/" + filename.str();
+        while ((pos = htmlTemplate.find("{{PATH}}")) != std::string::npos) {
+            htmlTemplate.replace(pos, 8, filePath);
+        }
+        
         // Respuesta exitosa
         _statusCode = HttpStatus::CREATED;
         _statusMessage = HttpStatus::getMessage(HttpStatus::CREATED);
         _headers["Content-Type"] = "text/html";
         
-        std::ostringstream response;
-        response << "<!DOCTYPE html>\n"
-                 << "<html><head><meta charset=\"UTF-8\"><title>Upload Success</title>\n"
-                 << "<style>body{font-family:Arial;max-width:600px;margin:50px auto;padding:20px;text-align:center}"
-                 << "h1{color:#4CAF50}.btn{background:#2196F3;color:white;padding:10px 20px;text-decoration:none;"
-                 << "border-radius:5px;display:inline-block;margin-top:20px}</style></head>\n"
-                 << "<body><h1>✅ Archivo subido exitosamente</h1>\n"
-                 << "<p>Archivo guardado como: <strong>" << filename.str() << "</strong></p>\n"
-                 << "<p>Ruta: /autoindex/archivosSubidos/" << filename.str() << "</p>\n"
-                 << "<a href=\"/\" class=\"btn\">Volver al inicio</a>\n"
-                 << "<a href=\"/autoindex/\" class=\"btn\">Ver archivos subidos</a>\n"
-                 << "</body></html>";
-        
-        _body = response.str();
+        _body = htmlTemplate;
     }
     else {
         respuestaError(HttpStatus::NOT_FOUND);

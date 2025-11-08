@@ -56,9 +56,7 @@ void Request::parse(const std::string& rawRequest) {
 
 // Getters
 std::string Request::getMethod() const {return _method;}
-
 std::string Request::getPath() const {return _path;}
-
 std::string Request::getVersion() const {return _version;}
 
 std::string Request::getHeader(const std::string& key) const {
