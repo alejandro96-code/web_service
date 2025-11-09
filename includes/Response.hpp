@@ -35,9 +35,6 @@ public:
     
     void procesar(const Request& request);
     std::string toString() const;
-    
-    int getStatusCode() const;
-    std::string getBody() const;
 
 protected:
     // Métodos virtuales para cada tipo de petición

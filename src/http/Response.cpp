@@ -59,15 +59,6 @@ std::string Response::toString() const
     return response.str();
 }
 
-// Getters
-int Response::getStatusCode() const {
-    return _statusCode;
-}
-
-std::string Response::getBody() const {
-    return _body;
-}
-
 // Leer archivo del sistema
 std::string Response::leerArchivo(const std::string& ruta)
 {
