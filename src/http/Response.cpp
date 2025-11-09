@@ -152,7 +152,16 @@ void Response::respuestaError(int codigo)
     
     std::map<int, std::string>::const_iterator it = _errorPages.find(codigo);
     if (it != _errorPages.end()) {
-        std::string rutaError = _documentRoot + "/" + it->second;
+        // Si la ruta no empieza con '/', es relativa al documentRoot
+        std::string rutaError;
+        if (it->second[0] == '/') {
+            // Ruta absoluta desde la raíz del proyecto
+            rutaError = it->second.substr(1); // Quitar el '/' inicial
+        } else {
+            // Ruta relativa (puede estar en templates/ o html/)
+            rutaError = it->second;
+        }
+        
         std::string contenido = leerArchivo(rutaError);
         
         if (!contenido.empty()) {

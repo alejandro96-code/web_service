@@ -56,7 +56,6 @@ void Response::manejarGET(const Request& request)
         return;
     }
     
-    // Determinar Content-Type
     size_t puntoPos = path.find_last_of('.');
     std::string extension = "";
     if (puntoPos != std::string::npos) {
