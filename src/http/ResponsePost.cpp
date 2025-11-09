@@ -76,20 +76,6 @@ void Response::manejarPOST(const Request& request)
         htmlTemplate = buffer.str();
         templateFile.close();
         
-        // Reemplazar placeholders
-        size_t pos;
-        
-        // Reemplazar {{FILENAME}}
-        while ((pos = htmlTemplate.find("{{FILENAME}}")) != std::string::npos) {
-            htmlTemplate.replace(pos, 12, filename.str());
-        }
-        
-        // Reemplazar {{PATH}}
-        std::string filePath = "/autoindex/archivosSubidos/" + filename.str();
-        while ((pos = htmlTemplate.find("{{PATH}}")) != std::string::npos) {
-            htmlTemplate.replace(pos, 8, filePath);
-        }
-        
         // Respuesta exitosa
         _statusCode = HttpStatus::CREATED;
         _statusMessage = HttpStatus::getMessage(HttpStatus::CREATED);

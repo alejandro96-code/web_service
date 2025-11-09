@@ -48,23 +48,6 @@ void Response::manejarDELETE(const Request& request)
         htmlTemplate = buffer.str();
         templateFile.close();
         
-        // Extraer el nombre del archivo de la ruta
-        size_t lastSlash = path.find_last_of('/');
-        std::string filename = (lastSlash != std::string::npos) ? path.substr(lastSlash + 1) : path;
-        
-        // Reemplazar placeholders
-        size_t pos;
-        
-        // Reemplazar {{FILENAME}}
-        while ((pos = htmlTemplate.find("{{FILENAME}}")) != std::string::npos) {
-            htmlTemplate.replace(pos, 12, filename);
-        }
-        
-        // Reemplazar {{PATH}}
-        while ((pos = htmlTemplate.find("{{PATH}}")) != std::string::npos) {
-            htmlTemplate.replace(pos, 8, path);
-        }
-        
         // Respuesta exitosa
         _statusCode = HttpStatus::OK;
         _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
