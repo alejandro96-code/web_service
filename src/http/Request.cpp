@@ -1,13 +1,11 @@
 #include "Request.hpp"
 
-// Constructor por defecto
-Request::Request() : _method(""), _path(""), _version(""), _body("") {}
-
-// Constructor con petición
-Request::Request(const std::string& rawRequest) {parse(rawRequest);}
+Request::Request() : _method(""), _path(""), _version(""), _body("") {} // Constructor por defecto
+Request::Request(const std::string& rawRequest) {parse(rawRequest);} // Constructor con petición
 
 // Parsear la petición HTTP
-void Request::parse(const std::string& rawRequest) {
+void Request::parse(const std::string& rawRequest)
+{
     _rawRequest = rawRequest;
     
     // Dividir la petición en líneas
