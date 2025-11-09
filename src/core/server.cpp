@@ -2,8 +2,29 @@
 #include "Request.hpp"
 #include "Response.hpp"
 
-// Constructor
-Server::Server(const ServerConfig& config): _server_fd(-1)
+
+/*
+    Creacion y conexion del Servidor:
+    Primero: tenemos que crear un socket (un punto de conexion) 
+        AF_INET → Usar IPv4
+        SOCK_STREAM → Conexión TCP (fiable, en orden)
+        IPPROTO_TCP → Protocolo TCP
+    Segundo: configuraremos nuestro socket
+        _server_fd -> sera el servidor que hemos creado antes
+        SOL_SOCKET -> tipo de configuracion que queremos recibir. en este caso(TCP/IP)
+        SO_REUSEADD -> permite reusar el puerto inmediatamente.
+    Tercero vincularemos nuestro socket al puerto 8080
+        INADDR_ANY → Escucha en todas las interfaces de red (localhost, IP externa, etc.)
+        htons(_puerto) → Convierte el número de puerto al formato de red
+        bind() → Asocia el socket con la dirección IP y puerto
+    Cuarto: Escucharemos mediante el socket
+        listen() → Pone el socket en modo escucha (para esperar las request)
+        _backlog = 3 → Cola de espera (máximo 3 conexiones esperando)
+        Ahora el servidor está listo para recibir conexion
+
+
+*/
+Server::Server(const ServerConfig& config): _server_fd(-1) // Constructor
 {
     _puerto = config.port;
     _backlog = 3; // Valor por defecto
@@ -21,17 +42,10 @@ Server::Server(const ServerConfig& config): _server_fd(-1)
     std::cout << "  Páginas de error: " << _error_pages.size() << std::endl;
     std::cout << "  Locations: " << _locations.size() << std::endl << std::endl;
 }
+Server::~Server(){if (_server_fd != -1) {close(_server_fd);}} // Destructor
 
-// Destructor
-Server::~Server()
+bool Server::crearSocket()
 {
-    if (_server_fd != -1) {
-        close(_server_fd);
-    }
-}
-
-// Crear socket
-bool Server::crearSocket() {
     _server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (_server_fd == -1) {
         std::cerr << "Error al crear socket" << std::endl;
@@ -40,8 +54,8 @@ bool Server::crearSocket() {
     return true;
 }
 
-// Configurar socket
-bool Server::configurarSocket() {
+bool Server::configurarSocket()
+{
     int opt = 1;
     if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         std::cerr << "Error al configurar socket" << std::endl;
@@ -50,8 +64,8 @@ bool Server::configurarSocket() {
     return true;
 }
 
-// Vincular puerto
-bool Server::vincularPuerto() {
+bool Server::vincularPuerto()
+{
     struct sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
@@ -65,7 +79,6 @@ bool Server::vincularPuerto() {
     return true;
 }
 
-// Escuchar conexiones
 bool Server::escucharConexiones() {
     if (listen(_server_fd, _backlog) < 0)
     {
@@ -76,7 +89,6 @@ bool Server::escucharConexiones() {
     return true;
 }
 
-// Iniciar el servidor
 void Server::iniciar()
 {
     if (!crearSocket()) return;
@@ -85,22 +97,17 @@ void Server::iniciar()
     if (!escucharConexiones()) return;
 }
 
-// Leer archivo HTML
-std::string Server::leerArchivoHTML(const std::string& ruta)
-{
-    std::ifstream file(ruta.c_str());
-    if (!file.is_open()) {
-        return "<html><body><h1>404 - Archivo no encontrado</h1></body></html>";
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-}
-
-// Manejar cliente
+/*
+    ManejarCliente: Funcion para procesar una peticion http
+    creamos un buufer de 4096 bytes, lo llenamos de 0
+    recibe los datos del cliente y los lee.
+    convertimos la info del buffer en string
+    y la guardamos en un objeto de tipo REQUEST
+    Generamos nuestra respuesta de tipo RESPONSE
+    y enviamos la respuesta al cliente.
+*/
 void Server::manejarCliente(int client_fd)
 {
-    // 1. Leer la petición del cliente
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, sizeof(buffer));
     int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -111,20 +118,18 @@ void Server::manejarCliente(int client_fd)
     }
     
     std::string rawRequest(buffer);
-    
-    // 2. Parsear la petición con nuestra clase Request
     Request request(rawRequest);
-    
-    // 3. Generar respuesta usando la clase Response con páginas de error y locations
     Response response(request, _document_root, _error_pages, _locations);
     std::string httpResponse = response.toString();
-    
-    // 4. Enviar respuesta al cliente
     send(client_fd, httpResponse.c_str(), httpResponse.length(), 0);
     close(client_fd);
 }
 
-// Ejecutar el servidor (bucle principal)
+/*
+    El server se queda esperando hasta que entre un nuevo cliente_fd
+    cliente_fd (Línea individual para hablar con un cliente específico añadiendole nuestro server_fd)
+    cuando haya un cliente lanzara manejarCliente(client_fd);
+*/
 void Server::ejecutar()
 {
     while (true) {

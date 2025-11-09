@@ -32,7 +32,6 @@ private:
     bool vincularPuerto();
     bool escucharConexiones();
     void manejarCliente(int client_fd);
-    std::string leerArchivoHTML(const std::string& ruta);
 };
 
 #endif

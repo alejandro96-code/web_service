@@ -14,12 +14,12 @@ private:
     std::string _body;                              // Cuerpo de la petición (para POST)
 
 public:
-    // Constructor
-    Request();
-    Request(const std::string& rawRequest);
     
-    // Parsear la petición recibida
-    void parse(const std::string& rawRequest);
+    Request(); // Constructor
+    Request(const std::string& rawRequest); // Constructor con parametros
+    
+    
+    void parse(const std::string& rawRequest); // Parsear la petición recibida
     
     // Getters
     std::string getMethod() const;
