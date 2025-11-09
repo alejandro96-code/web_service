@@ -118,12 +118,6 @@ std::string Autoindex::generarHTML(const std::string& rutaDirectorio, const std:
     // Reemplazar placeholders
     size_t pos;
     
-    // Reemplazar {{TITLE}}
-    pos = htmlTemplate.find("{{TITLE}}");
-    if (pos != std::string::npos) {
-        htmlTemplate.replace(pos, 9, "Index of " + rutaURL);
-    }
-    
     // Reemplazar {{PATH}}
     pos = htmlTemplate.find("{{PATH}}");
     if (pos != std::string::npos) {
