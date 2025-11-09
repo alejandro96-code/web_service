@@ -22,6 +22,20 @@ void Response::manejarGET(const Request& request)
     std::string path = normalizarPath(request.getPath());
     std::string rutaCompleta = _documentRoot + path;
     
+    // Caso especial: si se solicita /delete_file.html, servir desde templates
+    if (path == "/delete_file.html") {
+        std::string contenido = leerArchivo("templates/delete_file.html");
+        if (!contenido.empty()) {
+            _statusCode = HttpStatus::OK;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
+            _headers["Content-Type"] = "text/html";
+            _body = contenido;
+            return;
+        }
+        respuestaError(HttpStatus::NOT_FOUND);
+        return;
+    }
+    
     if (esDirectorio(rutaCompleta))
     {
         std::string indexPath = rutaCompleta;

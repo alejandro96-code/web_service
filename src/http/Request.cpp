@@ -56,6 +56,23 @@ void Request::parse(const std::string& rawRequest) {
     // 4. Detectar _method=DELETE en el body (method override)
     if (_method == "POST" && _body.find("_method=DELETE") != std::string::npos) {
         _method = "DELETE";
+        
+        // Si el POST viene de /delete_file, extraer filename y modificar el path
+        if (_path == "/delete_file") {
+            size_t pos = _body.find("filename=");
+            if (pos != std::string::npos) {
+                pos += 9; // Longitud de "filename="
+                size_t end = _body.find("&", pos);
+                if (end == std::string::npos) {
+                    end = _body.find("\n", pos);
+                }
+                if (end == std::string::npos) {
+                    end = _body.length();
+                }
+                std::string filename = _body.substr(pos, end - pos);
+                _path = "/autoindex/archivosSubidos/" + filename;
+            }
+        }
     }
 }
 
