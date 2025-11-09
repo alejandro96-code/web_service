@@ -33,24 +33,44 @@ void Response::manejarDELETE(const Request& request)
             return;
         }
         
+        // Leer el template HTML de éxito
+        std::ifstream templateFile("templates/gooddelete.html");
+        std::string htmlTemplate;
+        
+        if (!templateFile.is_open()) {
+            respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
+            return;
+        }
+        
+        // Leer el contenido del template
+        std::stringstream buffer;
+        buffer << templateFile.rdbuf();
+        htmlTemplate = buffer.str();
+        templateFile.close();
+        
+        // Extraer el nombre del archivo de la ruta
+        size_t lastSlash = path.find_last_of('/');
+        std::string filename = (lastSlash != std::string::npos) ? path.substr(lastSlash + 1) : path;
+        
+        // Reemplazar placeholders
+        size_t pos;
+        
+        // Reemplazar {{FILENAME}}
+        while ((pos = htmlTemplate.find("{{FILENAME}}")) != std::string::npos) {
+            htmlTemplate.replace(pos, 12, filename);
+        }
+        
+        // Reemplazar {{PATH}}
+        while ((pos = htmlTemplate.find("{{PATH}}")) != std::string::npos) {
+            htmlTemplate.replace(pos, 8, path);
+        }
+        
         // Respuesta exitosa
         _statusCode = HttpStatus::OK;
         _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
         _headers["Content-Type"] = "text/html";
         
-        std::ostringstream response;
-        response << "<!DOCTYPE html>\n"
-                 << "<html><head><meta charset=\"UTF-8\"><title>Delete Success</title>\n"
-                 << "<style>body{font-family:Arial;max-width:600px;margin:50px auto;padding:20px;text-align:center}"
-                 << "h1{color:#4CAF50}.btn{background:#2196F3;color:white;padding:10px 20px;text-decoration:none;"
-                 << "border-radius:5px;display:inline-block;margin-top:20px}</style></head>\n"
-                 << "<body><h1>🗑️ Archivo eliminado exitosamente</h1>\n"
-                 << "<p>Archivo: <strong>" << path << "</strong></p>\n"
-                 << "<a href=\"/\" class=\"btn\">Volver al inicio</a>\n"
-                 << "<a href=\"/autoindex/\" class=\"btn\">Ver archivos restantes</a>\n"
-                 << "</body></html>";
-        
-        _body = response.str();
+        _body = htmlTemplate;
     }
     else {
         // Solo se pueden eliminar archivos en /autoindex/

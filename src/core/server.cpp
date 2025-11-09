@@ -100,8 +100,6 @@ std::string Server::leerArchivoHTML(const std::string& ruta)
 // Manejar cliente
 void Server::manejarCliente(int client_fd)
 {
-    std::cout << "Nueva conexión" << std::endl;
-    
     // 1. Leer la petición del cliente
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, sizeof(buffer));
@@ -116,7 +114,6 @@ void Server::manejarCliente(int client_fd)
     
     // 2. Parsear la petición con nuestra clase Request
     Request request(rawRequest);
-    request.print();  // Para ver qué recibimos (debug)
     
     // 3. Generar respuesta usando la clase Response con páginas de error y locations
     Response response(request, _document_root, _error_pages, _locations);

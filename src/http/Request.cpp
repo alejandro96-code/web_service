@@ -52,6 +52,11 @@ void Request::parse(const std::string& rawRequest) {
     while (std::getline(stream, bodyLine)) {
         _body += bodyLine + "\n";
     }
+    
+    // 4. Detectar _method=DELETE en el body (method override)
+    if (_method == "POST" && _body.find("_method=DELETE") != std::string::npos) {
+        _method = "DELETE";
+    }
 }
 
 // Getters
@@ -68,22 +73,3 @@ std::string Request::getHeader(const std::string& key) const {
 }
 
 std::string Request::getBody() const {return _body;}
-
-// Imprimir petición (para debug)
-void Request::print() const {
-    std::cout << "=== REQUEST ===" << std::endl;
-    std::cout << "Method: " << _method << std::endl;
-    std::cout << "Path: " << _path << std::endl;
-    std::cout << "Version: " << _version << std::endl;
-    std::cout << "Headers:" << std::endl;
-    
-    for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); 
-         it != _headers.end(); ++it) {
-        std::cout << "  " << it->first << ": " << it->second << std::endl;
-    }
-    
-    if (!_body.empty()) {
-        std::cout << "Body: " << _body << std::endl;
-    }
-    std::cout << "===============" << std::endl;
-}

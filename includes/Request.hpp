@@ -27,9 +27,6 @@ public:
     std::string getVersion() const;
     std::string getHeader(const std::string& key) const;
     std::string getBody() const;
-    
-    // Para debug
-    void print() const;
 };
 
 #endif
