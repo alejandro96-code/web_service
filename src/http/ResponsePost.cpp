@@ -1,5 +1,4 @@
 #include "Response.hpp"
-#include <sys/stat.h>
 #include <fstream>
 #include <sstream>
 #include <ctime>
@@ -8,75 +7,46 @@
 /*
     Peticion POST:
     Se usa principalmente para enviar datos a un servidor para crear o actualizar un recurso.
-
+    primero obtenemos si no es autoindex devolvemos in 404
+        comprobamos que el body (que se haya seleccionado un archivo)
+        si el body esta vacio devolvemos un 400
+        generamos un time para darle nombre al archivo (archivo_fecha)
+        añadimos la ruta del archivo y lo guardamos.
+        si el archivo no tiene lectura devolvemos un 500
+    La peticion ya se ha completado asi que leemos el contenido de goodPost
+    damos el codigo 201 a la peticion e imprimos el template de goodPost.
 */
 void Response::manejarPOST(const Request& request)
 {
     std::string path = request.getPath();
     
-    if (path == "/autoindex") {
-        // Obtener el body de la petición
+    if (path == "/autoindex")
+    {
         std::string body = request.getBody();
-        
-        if (body.empty()) {
+        if (body.empty())
+        {
             respuestaError(HttpStatus::BAD_REQUEST);
             return;
         }
         
-        // Verificar si se seleccionó un archivo (filename no está vacío)
-        std::string filename_marker = "filename=\"";
-        size_t filename_pos = body.find(filename_marker);
-        
-        if (filename_pos != std::string::npos) {
-            size_t start = filename_pos + filename_marker.length();
-            size_t end = body.find("\"", start);
-            
-            // Si el filename está vacío (filename=""), devolver 400
-            if (end != std::string::npos && start == end) {
-                respuestaError(HttpStatus::BAD_REQUEST);
-                return;
-            }
-        }
-        
-        // Crear directorio autoindex/archivosSubidos si no existe
-        std::string autoindexDir = _documentRoot + "/autoindex";
-        std::string uploadDir = autoindexDir + "/archivosSubidos";
-        mkdir(autoindexDir.c_str(), 0755);
-        mkdir(uploadDir.c_str(), 0755);
-        
-        // Generar nombre de archivo único con timestamp
         std::time_t now = std::time(NULL);
         std::ostringstream filename;
-        filename << "upload_" << now << ".txt";
+        filename << "archivo_" << now << ".txt";
         
-        std::string rutaArchivo = uploadDir + "/" + filename.str();
-        
-        // Guardar el archivo
+        std::string rutaArchivo = _documentRoot + "/autoindex/archivosSubidos/" + filename.str();
         std::ofstream file(rutaArchivo.c_str(), std::ios::binary);
         if (!file.is_open()) {
             respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
             return;
         }
-        
         file.write(body.c_str(), body.length());
         file.close();
         
-        // Leer el template HTML de éxito
         std::ifstream templateFile("templates/goodpost.html");
-        std::string htmlTemplate;
-        
-        if (!templateFile.is_open()) {
-            respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
-            return;
-        }
-        
-        // Leer el contenido del template
         std::stringstream buffer;
         buffer << templateFile.rdbuf();
-        htmlTemplate = buffer.str();
+        std::string htmlTemplate = buffer.str();
         templateFile.close();
-        
-        // Respuesta exitosa
         _statusCode = HttpStatus::CREATED;
         _statusMessage = HttpStatus::getMessage(HttpStatus::CREATED);
         _headers["Content-Type"] = "text/html";
