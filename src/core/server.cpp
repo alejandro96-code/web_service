@@ -2,7 +2,6 @@
 #include "Request.hpp"
 #include "Response.hpp"
 
-
 /*
     Creacion y conexion del Servidor:
     Primero: tenemos que crear un socket (un punto de conexion) 
@@ -21,8 +20,6 @@
         listen() → Pone el socket en modo escucha (para esperar las request)
         _backlog = 3 → Cola de espera (máximo 3 conexiones esperando)
         Ahora el servidor está listo para recibir conexion
-
-
 */
 Server::Server(const ServerConfig& config): _server_fd(-1) // Constructor
 {
