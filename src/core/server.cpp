@@ -5,24 +5,24 @@
 
 /*
     Creacion y conexion del Servidor:
-    Primero: tenemos que crear un socket (un punto de conexion) 
+    1º Tenemos que crear un socket (un punto de conexion) 
         AF_INET → Usar IPv4
         SOCK_STREAM → Conexión TCP (fiable, en orden)
         IPPROTO_TCP → Protocolo TCP
-    Segundo: configuramos el non-blocking:
+    2º Configuramos el non-blocking:
         Basicamente es una funcion para que el cliente no se quede congelado esperando
         una respuestay los demas clientes puedan seguir utilizando el servidor_web,
         si no hay datos devuelve un -1 con el mensaje de error y si hay datos, los devuelve.
         Debemos configurar esto tanto al crear el socket como al ejeutar las llamadas de los clientes
-    Tercero: configuraremos nuestro socket
+    3º Configuraremos nuestro socket
         _server_fd -> sera el servidor que hemos creado antes
         SOL_SOCKET -> tipo de configuracion que queremos recibir. en este caso(TCP/IP)
         SO_REUSEADD -> permite reusar el puerto inmediatamente.
-    Cuarto vincularemos nuestro socket al puerto 8080
+    4º Vincularemos nuestro socket al puerto 8080
         INADDR_ANY → Escucha en todas las interfaces de red (localhost, IP externa, etc.)
         htons(_puerto) → Convierte el número de puerto al formato de red
         bind() → Asocia el socket con la dirección IP y puerto
-    Quinto: Escucharemos mediante el socket
+    5º Escucharemos mediante el socket
         listen() → Pone el socket en modo escucha (para esperar las request)
         _backlog = 3 → Cola de espera (máximo 3 conexiones esperando)
         Ahora el servidor está listo para recibir conexion
@@ -54,8 +54,6 @@ bool Server::crearSocket()
         std::cerr << "Error al crear socket" << std::endl;
         return false;
     }
-    
-    // Configurar socket como non-blocking
     if (fcntl(_server_fd, F_SETFL, O_NONBLOCK) < 0) {
         std::cerr << "Error al configurar socket non-blocking" << std::endl;
         return false;
@@ -108,13 +106,16 @@ void Server::iniciar()
 }
 
 /*
-    ManejarCliente: Funcion para procesar una peticion http
-    creamos un buufer de 4096 bytes, lo llenamos de 0
-    recibe los datos del cliente y los lee.
-    convertimos la info del buffer en string
-    y la guardamos en un objeto de tipo REQUEST
-    Generamos nuestra respuesta de tipo RESPONSE
-    y enviamos la respuesta al cliente.
+    ManejarCliente: Funcion para procesar una peticion http.
+    1º Creamos un buufer de 4096 bytes, lo llenamos de 0, recibe los datos del cliente y los lee.
+    2º Verificamos la cantidad de bytes leidos,
+        si hay -1 significa que la conexion se a cerrado de golep o un error de red
+        su hay 0 significa que le cliente a cerrado la conexion de manera normal
+        (este paso lo haremos tambien en los bytes enviados al servidor)
+        si hay -1 significa que hay un error al enviar la respuesta
+        si hay 0 significa qyue no se puede enviar nada (raro pero posible)
+    3º Convertimos la info del buffer en string y la guardamos en un objeto de tipo REQUEST
+    4º Generamos nuestra respuesta de tipo RESPONSE y enviamos la respuesta al cliente.
 */
 void Server::manejarCliente(int client_fd)
 {
@@ -122,7 +123,12 @@ void Server::manejarCliente(int client_fd)
     memset(buffer, 0, sizeof(buffer));
     int bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     
-    if (bytes_read <= 0) {
+    if (bytes_read == -1) {
+        std::cerr << "Error en recv del cliente" << std::endl;
+        close(client_fd);
+        return;
+    }
+    if (bytes_read == 0) {
         close(client_fd);
         return;
     }
@@ -130,8 +136,20 @@ void Server::manejarCliente(int client_fd)
     std::string rawRequest(buffer);
     Request request(rawRequest);
     Response response(request, _document_root, _error_pages, _locations);
-    std::string httpResponse = response.toString();
-    send(client_fd, httpResponse.c_str(), httpResponse.length(), 0);
+    std::string httpResponse = response.toString();    
+    ssize_t bytes_sent = send(client_fd, httpResponse.c_str(), httpResponse.length(), 0);
+    
+    if (bytes_sent == -1) {
+        std::cerr << "Error al enviar respuesta al cliente" << std::endl;
+        close(client_fd);
+        return;
+    }
+    if (bytes_sent == 0) {
+        std::cerr << "No se pudo enviar datos al cliente" << std::endl;
+        close(client_fd);
+        return;
+    }
+    
     close(client_fd);
 }
 
@@ -147,8 +165,6 @@ void Server::ejecutar()
         if (client_fd < 0) {
             continue;
         }
-        
-        // Configurar cliente como non-blocking
         if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) {
             std::cerr << "Error al configurar cliente non-blocking" << std::endl;
             close(client_fd);
