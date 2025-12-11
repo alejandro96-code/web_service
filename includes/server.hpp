@@ -16,6 +16,8 @@ private:
     std::vector<Location> _locations;
     size_t _client_max_body_size;
     int _server_fd;
+    std::set<int> _active_clients;
+    std::map<int, std::string> _pending_responses;
 
 public:
     

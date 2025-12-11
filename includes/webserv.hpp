@@ -10,6 +10,8 @@
 // LIBRERÍAS ESTÁNDAR DE C++
 #include <string>
 #include <map>
+#include <vector>
+#include <set>
 #include <iostream>
 #include <sstream>
 #include <fstream>
