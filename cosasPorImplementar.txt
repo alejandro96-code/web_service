@@ -1,0 +1,21 @@
+IMPLEMENTAR SELECT/POLL/EPOLL ← Sin esto = 0 puntos
+NON-BLOCKING SOCKETS
+Manejo correcto de errores en recv/send
+Múltiples servidores y puertos
+Validación de client_max_body_size
+CGI básico
+
+Recomendación de orden de implementación:
+
+
+1. Non-blocking sockets (Implementado)
+2. Mejorar errores recv/send
+3. Métodos desconocidos
+4. client_max_body_size
+
+
+5. Múltiples servidores y puertos
+6. Redirecciones
+
+7. SELECT/POLL + buffers ← El más crítico y difícil
+8. CGI básico

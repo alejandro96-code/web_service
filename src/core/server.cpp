@@ -1,6 +1,7 @@
 #include "server.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include <fcntl.h>
 
 /*
     Creacion y conexion del Servidor:
@@ -8,15 +9,20 @@
         AF_INET → Usar IPv4
         SOCK_STREAM → Conexión TCP (fiable, en orden)
         IPPROTO_TCP → Protocolo TCP
-    Segundo: configuraremos nuestro socket
+    Segundo: configuramos el non-blocking:
+        Basicamente es una funcion para que el cliente no se quede congelado esperando
+        una respuestay los demas clientes puedan seguir utilizando el servidor_web,
+        si no hay datos devuelve un -1 con el mensaje de error y si hay datos, los devuelve.
+        Debemos configurar esto tanto al crear el socket como al ejeutar las llamadas de los clientes
+    Tercero: configuraremos nuestro socket
         _server_fd -> sera el servidor que hemos creado antes
         SOL_SOCKET -> tipo de configuracion que queremos recibir. en este caso(TCP/IP)
         SO_REUSEADD -> permite reusar el puerto inmediatamente.
-    Tercero vincularemos nuestro socket al puerto 8080
+    Cuarto vincularemos nuestro socket al puerto 8080
         INADDR_ANY → Escucha en todas las interfaces de red (localhost, IP externa, etc.)
         htons(_puerto) → Convierte el número de puerto al formato de red
         bind() → Asocia el socket con la dirección IP y puerto
-    Cuarto: Escucharemos mediante el socket
+    Quinto: Escucharemos mediante el socket
         listen() → Pone el socket en modo escucha (para esperar las request)
         _backlog = 3 → Cola de espera (máximo 3 conexiones esperando)
         Ahora el servidor está listo para recibir conexion
@@ -48,6 +54,13 @@ bool Server::crearSocket()
         std::cerr << "Error al crear socket" << std::endl;
         return false;
     }
+    
+    // Configurar socket como non-blocking
+    if (fcntl(_server_fd, F_SETFL, O_NONBLOCK) < 0) {
+        std::cerr << "Error al configurar socket non-blocking" << std::endl;
+        return false;
+    }
+    
     return true;
 }
 
@@ -134,6 +147,14 @@ void Server::ejecutar()
         if (client_fd < 0) {
             continue;
         }
+        
+        // Configurar cliente como non-blocking
+        if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) {
+            std::cerr << "Error al configurar cliente non-blocking" << std::endl;
+            close(client_fd);
+            continue;
+        }
+        
         manejarCliente(client_fd);
     }
 }
