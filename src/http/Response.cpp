@@ -4,9 +4,10 @@
 // Constructor
 Response::Response(const Request& request, const std::string& documentRoot,
                    const std::map<int, std::string>& errorPages,
-                   const std::vector<Location>& locations)
+                   const std::vector<Location>& locations,
+                   size_t clientMaxBodySize)
     : _statusCode(200), _statusMessage("OK"), _documentRoot(documentRoot), 
-      _errorPages(errorPages), _locations(locations)
+      _errorPages(errorPages), _locations(locations), _clientMaxBodySize(clientMaxBodySize)
 {
     try {
         procesar(request);
@@ -28,6 +29,18 @@ void Response::procesar(const Request& request)
     if (method.empty()) {
         respuestaError(HttpStatus::BAD_REQUEST);
         return;
+    }
+    
+    // Validar tamaño del body solo para POST (único método implementado que acepta body)
+    if (method == "POST") {
+        std::string contentLengthStr = request.getHeader("Content-Length");
+        if (!contentLengthStr.empty()) {
+            size_t contentLength = atoi(contentLengthStr.c_str());
+            if (contentLength > _clientMaxBodySize) {
+                respuestaError(HttpStatus::PAYLOAD_TOO_LARGE);
+                return;
+            }
+        }
     }
     
     // Validar que el método está permitido para esta ruta

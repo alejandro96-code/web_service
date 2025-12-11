@@ -36,6 +36,7 @@ Server::Server(const ServerConfig& config): _server_fd(-1) // Constructor
     _server_name = config.server_name;
     _error_pages = config.error_pages;
     _locations = config.locations;
+    _client_max_body_size = config.client_max_body_size;
     
     std::cout << "Configuración cargada:" << std::endl;
     std::cout << "  Puerto: " << _puerto << std::endl;
@@ -54,11 +55,6 @@ bool Server::crearSocket()
         std::cerr << "Error al crear socket" << std::endl;
         return false;
     }
-    if (fcntl(_server_fd, F_SETFL, O_NONBLOCK) < 0) {
-        std::cerr << "Error al configurar socket non-blocking" << std::endl;
-        return false;
-    }
-    
     return true;
 }
 
@@ -107,15 +103,10 @@ void Server::iniciar()
 
 /*
     ManejarCliente: Funcion para procesar una peticion http.
-    1º Creamos un buufer de 4096 bytes, lo llenamos de 0, recibe los datos del cliente y los lee.
-    2º Verificamos la cantidad de bytes leidos,
-        si hay -1 significa que la conexion se a cerrado de golep o un error de red
-        su hay 0 significa que le cliente a cerrado la conexion de manera normal
-        (este paso lo haremos tambien en los bytes enviados al servidor)
-        si hay -1 significa que hay un error al enviar la respuesta
-        si hay 0 significa qyue no se puede enviar nada (raro pero posible)
-    3º Convertimos la info del buffer en string y la guardamos en un objeto de tipo REQUEST
-    4º Generamos nuestra respuesta de tipo RESPONSE y enviamos la respuesta al cliente.
+    Creamos un buffer de 4096 bytes, lo llenamos de 0, recibe los datos del cliente y los lee.
+    Verificamos la cantidad de bytes leidos,
+    Convertimos la info del buffer en string y la guardamos en un objeto de tipo REQUEST
+    Generamos nuestra respuesta de tipo RESPONSE y enviamos la respuesta al cliente.
 */
 void Server::manejarCliente(int client_fd)
 {
@@ -135,10 +126,10 @@ void Server::manejarCliente(int client_fd)
     
     std::string rawRequest(buffer);
     Request request(rawRequest);
-    Response response(request, _document_root, _error_pages, _locations);
+    Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
     std::string httpResponse = response.toString();    
     ssize_t bytes_sent = send(client_fd, httpResponse.c_str(), httpResponse.length(), 0);
-    
+
     if (bytes_sent == -1) {
         std::cerr << "Error al enviar respuesta al cliente" << std::endl;
         close(client_fd);
@@ -165,12 +156,8 @@ void Server::ejecutar()
         if (client_fd < 0) {
             continue;
         }
-        if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0) {
-            std::cerr << "Error al configurar cliente non-blocking" << std::endl;
-            close(client_fd);
-            continue;
-        }
         
         manejarCliente(client_fd);
     }
 }
+

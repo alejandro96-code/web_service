@@ -22,8 +22,9 @@ struct ServerConfig {
     std::string index;
     std::map<int, std::string> error_pages;
     std::vector<Location> locations;
+    size_t client_max_body_size;
     
-    ServerConfig() : port(-1) {}
+    ServerConfig() : port(-1), client_max_body_size(1048576) {}
 };
 
 // Función para leer el archivo de configuración estilo NGINX

@@ -31,6 +31,7 @@ std::map<int, std::string> HttpStatus::initMessages()
     messages[403] = "Forbidden";
     messages[404] = "Not Found";
     messages[405] = "Method Not Allowed";
+    messages[413] = "Payload Too Large";
     messages[500] = "Internal Server Error";
     messages[501] = "Not Implemented";
     

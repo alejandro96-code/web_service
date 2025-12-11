@@ -14,6 +14,7 @@ private:
     std::string _server_name;
     std::map<int, std::string> _error_pages;
     std::vector<Location> _locations;
+    size_t _client_max_body_size;
     int _server_fd;
 
 public:

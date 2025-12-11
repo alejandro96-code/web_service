@@ -13,6 +13,7 @@ class HttpStatus
         static const int FORBIDDEN = 403;
         static const int NOT_FOUND = 404;
         static const int METHOD_NOT_ALLOWED = 405;
+        static const int PAYLOAD_TOO_LARGE = 413;
         static const int INTERNAL_SERVER_ERROR = 500;
         static const int NOT_IMPLEMENTED = 501;
         static std::string getMessage(int code);

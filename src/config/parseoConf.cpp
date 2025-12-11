@@ -105,6 +105,23 @@ static bool parseServer(std::ifstream& file, ServerConfig& server) {
             iss >> code >> page;
             server.error_pages[code] = page;
         }
+        else if (key == "client_max_body_size") {
+            std::string value;
+            iss >> value;
+            // Parsear tamaño: 10M, 1G, 500K
+            size_t size = 0;
+            char unit = value[value.length() - 1];
+            if (unit == 'M' || unit == 'm') {
+                size = atoi(value.c_str()) * 1024 * 1024;
+            } else if (unit == 'G' || unit == 'g') {
+                size = atoi(value.c_str()) * 1024 * 1024 * 1024;
+            } else if (unit == 'K' || unit == 'k') {
+                size = atoi(value.c_str()) * 1024;
+            } else {
+                size = atoi(value.c_str());
+            }
+            server.client_max_body_size = size;
+        }
     }
     
     return false;

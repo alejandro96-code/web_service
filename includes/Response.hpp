@@ -16,6 +16,7 @@ protected:
     std::string _documentRoot;
     std::map<int, std::string> _errorPages;
     std::vector<Location> _locations;
+    size_t _clientMaxBodySize;
 
     // Métodos auxiliares compartidos
     std::string leerArchivo(const std::string& ruta);
@@ -30,7 +31,8 @@ protected:
 public:
     Response(const Request& request, const std::string& documentRoot, 
              const std::map<int, std::string>& errorPages,
-             const std::vector<Location>& locations);
+             const std::vector<Location>& locations,
+             size_t clientMaxBodySize);
     virtual ~Response();
     
     void procesar(const Request& request);
