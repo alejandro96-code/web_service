@@ -24,6 +24,12 @@ void Response::procesar(const Request& request)
     std::string method = request.getMethod();
     std::string path = request.getPath();
     
+    // Validar que el método no esté vacío
+    if (method.empty()) {
+        respuestaError(HttpStatus::BAD_REQUEST);
+        return;
+    }
+    
     // Validar que el método está permitido para esta ruta
     if (!metodoPermitido(path, method)) {
         respuestaError(HttpStatus::METHOD_NOT_ALLOWED);
@@ -39,8 +45,12 @@ void Response::procesar(const Request& request)
     else if (method == "DELETE") {
         manejarDELETE(request);
     }
+    else if (method == "PUT" || method == "PATCH" || method == "HEAD" || 
+             method == "OPTIONS" || method == "TRACE" || method == "CONNECT") {
+        respuestaError(HttpStatus::NOT_IMPLEMENTED);
+    }
     else {
-        respuestaError(HttpStatus::METHOD_NOT_ALLOWED);
+        respuestaError(HttpStatus::BAD_REQUEST);
     }
 }
 

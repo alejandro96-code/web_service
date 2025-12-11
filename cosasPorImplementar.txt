@@ -9,8 +9,8 @@ Recomendación de orden de implementación:
 
 
 1. Non-blocking sockets (Implementado)
-2. Mejorar errores recv/send
-3. Métodos desconocidos
+2. Mejorar errores recv/send (Implementado)
+3. Métodos desconocidos (Implementado)
 4. client_max_body_size
 
 

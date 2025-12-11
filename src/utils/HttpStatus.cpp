@@ -12,7 +12,8 @@
         404 archivo, ruta... no encontrada
         405 solicitud de un metodo no permitido
     Los codigos 500 indican error en el servidor
-        500 error interno (la solicitud esta bien pero algo falla para realizarla)
+        500 error interno (la solicitud esta bien pero algo falla en el servidor)
+        501 no implementado (el servidor no reconoce el metodo solicitado)
 
     Tambien existen los codigo 30x aunque aqui no los usamos (codigos de redireccion)
         que indican que el recurso requiere una accion adicional o se ha movido
@@ -31,6 +32,7 @@ std::map<int, std::string> HttpStatus::initMessages()
     messages[404] = "Not Found";
     messages[405] = "Method Not Allowed";
     messages[500] = "Internal Server Error";
+    messages[501] = "Not Implemented";
     
     return messages;
 }
