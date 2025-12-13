@@ -11,11 +11,9 @@ Recomendación de orden de implementación:
 1. Non-blocking sockets (Implementado)
 2. Mejorar errores recv/send (Implementado)
 3. Métodos desconocidos (Implementado)
-4. client_max_body_size
-
-
+4. client_max_body_size (Implementado pero revisar por el parseo del conf)
 5. Múltiples servidores y puertos
 6. Redirecciones
-
-7. SELECT/POLL + buffers ← El más crítico y difícil
-8. CGI básico
+7. Virtual Hosts (server_name)
+8. SELECT/POLL + buffers (Implementado)
+9. CGI básico + chuncked
