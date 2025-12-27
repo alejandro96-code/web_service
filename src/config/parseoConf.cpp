@@ -150,6 +150,7 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
     std::string linea;
     bool dentro_http = false;
     bool encontrado_http = false;
+    size_t http_client_max_body_size = 1048576; // Default 1MB
     
     while (std::getline(file, linea)) {
         linea = trim(linea);
@@ -164,10 +165,42 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
             continue;
         }
         
+        // Parsear directivas a nivel http
+        if (dentro_http && linea.find("server") != 0 && linea.find("}") != 0) {
+            // Quitar punto y coma
+            if (!linea.empty() && linea[linea.length() - 1] == ';')
+                linea = linea.substr(0, linea.length() - 1);
+            
+            std::istringstream iss(linea);
+            std::string key;
+            iss >> key;
+            
+            if (key == "client_max_body_size") {
+                std::string value;
+                iss >> value;
+                size_t size = 0;
+                char unit = value[value.length() - 1];
+                if (unit == 'M' || unit == 'm') {
+                    size = atoi(value.c_str()) * 1024 * 1024;
+                } else if (unit == 'G' || unit == 'g') {
+                    size = atoi(value.c_str()) * 1024 * 1024 * 1024;
+                } else if (unit == 'K' || unit == 'k') {
+                    size = atoi(value.c_str()) * 1024;
+                } else {
+                    size = atoi(value.c_str());
+                }
+                http_client_max_body_size = size;
+            }
+        }
+        
         // Detectar bloque server dentro de http
         if (dentro_http && linea.find("server") == 0) {
             ServerConfig server;
             if (parseServer(file, server)) {
+                // Aplicar client_max_body_size del nivel http si no está configurado en server
+                if (server.client_max_body_size == 1048576) {
+                    server.client_max_body_size = http_client_max_body_size;
+                }
                 servers.push_back(server);
             }
         }

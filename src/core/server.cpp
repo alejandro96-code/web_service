@@ -37,14 +37,6 @@ Server::Server(const ServerConfig& config): _server_fd(-1)
     _error_pages = config.error_pages;
     _locations = config.locations;
     _client_max_body_size = config.client_max_body_size;
-    
-    std::cout << "Configuración cargada:" << std::endl;
-    std::cout << "  Puerto: " << _puerto << std::endl;
-    std::cout << "  Server name: " << _server_name << std::endl;
-    std::cout << "  Document root: " << _document_root << std::endl;
-    std::cout << "  Index file: " << _index_file << std::endl;
-    std::cout << "  Páginas de error: " << _error_pages.size() << std::endl;
-    std::cout << "  Locations: " << _locations.size() << std::endl << std::endl;
 }
 Server::~Server(){if (_server_fd != -1) {close(_server_fd);}}
 
@@ -95,7 +87,6 @@ bool Server::escucharConexiones() {
         std::cerr << "Error en listen" << std::endl;
         return false;
     }
-    std::cout << "Servidor escuchando en el puerto " << _puerto << std::endl;
     return true;
 }
 
@@ -108,11 +99,12 @@ void Server::iniciar()
 }
 
 /*
-    ManejarCliente: Funcion para procesar una peticion http.
-    Creamos un buffer de 4096 bytes, lo llenamos de 0, recibe los datos del cliente y los lee.
-    Verificamos la cantidad de bytes leidos,
-    Convertimos la info del buffer en string y la guardamos en un objeto de tipo REQUEST
-    Generamos nuestra respuesta de tipo RESPONSE y enviamos la respuesta al cliente.
+    ManejarCliente: Lee datos del cliente de forma acumulativa.
+    1. Lee chunk de datos (máx 4096 bytes)
+    2. Acumula en buffer del cliente
+    3. Si headers completos, verifica Content-Length
+    4. Si Content-Length > límite, rechaza con 413
+    5. Si petición completa, procesa y responde
 */
 void Server::manejarCliente(int client_fd)
 {
@@ -124,21 +116,127 @@ void Server::manejarCliente(int client_fd)
         std::cerr << "Error en recv del cliente" << std::endl;
         close(client_fd);
         _active_clients.erase(client_fd);
+        _client_buffers.erase(client_fd);
+        _expected_content_length.erase(client_fd);
+        _headers_complete.erase(client_fd);
+        _bytes_to_discard.erase(client_fd);
         return;
     }
     if (bytes_read == 0) {
         close(client_fd);
         _active_clients.erase(client_fd);
+        _client_buffers.erase(client_fd);
+        _expected_content_length.erase(client_fd);
+        _headers_complete.erase(client_fd);
+        _bytes_to_discard.erase(client_fd);
         return;
     }
-
-    std::string rawRequest(buffer);
-    Request request(rawRequest);
-    Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
-    std::string httpResponse = response.toString();
     
-    _pending_responses[client_fd] = httpResponse;
-    _active_clients.erase(client_fd);
+    // Si este cliente está siendo rechazado, descartar datos sin procesar
+    if (_bytes_to_discard.find(client_fd) != _bytes_to_discard.end()) {
+        size_t& remaining = _bytes_to_discard[client_fd];
+        if ((size_t)bytes_read >= remaining) {
+            _bytes_to_discard.erase(client_fd);
+        } else {
+            remaining -= bytes_read;
+        }
+        return;
+    }
+    
+    // Acumular datos en el buffer del cliente
+    _client_buffers[client_fd].append(buffer, bytes_read);
+    
+    // Si aún no hemos parseado los headers, intentar hacerlo
+    if (!_headers_complete[client_fd]) {
+        size_t header_end = _client_buffers[client_fd].find("\r\n\r\n");
+        
+        if (header_end != std::string::npos) {
+            // Headers completos
+            _headers_complete[client_fd] = true;
+            std::string headers = _client_buffers[client_fd].substr(0, header_end);
+            
+            // Extraer Content-Length
+            size_t content_length = extraerContentLength(headers);
+            _expected_content_length[client_fd] = content_length;
+            
+            // VALIDAR LÍMITE INMEDIATAMENTE
+            if (content_length > _client_max_body_size) {
+                // Crear Request dummy para generar error 413 con template
+                std::string rawRequest = _client_buffers[client_fd];
+                Request request(rawRequest);
+                Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
+                std::string httpResponse = response.toString();
+                
+                // La validación en Response.cpp generará el 413 con template
+                _pending_responses[client_fd] = httpResponse;
+                
+                // Calcular cuántos bytes del body faltan por recibir y descartar
+                size_t header_end = _client_buffers[client_fd].find("\r\n\r\n");
+                size_t bytes_already_received = _client_buffers[client_fd].length() - (header_end + 4);
+                size_t bytes_remaining = content_length - bytes_already_received;
+                
+                // Marcar este cliente para descartar el resto de datos
+                _bytes_to_discard[client_fd] = bytes_remaining;
+                
+                // NO borrar _active_clients aquí - se borrará después de enviar
+                _client_buffers.erase(client_fd);
+                _expected_content_length.erase(client_fd);
+                _headers_complete.erase(client_fd);
+                return;
+            }
+        }
+    }
+    
+    // Si headers completos, verificar si tenemos toda la petición
+    if (_headers_complete[client_fd] && peticionCompleta(client_fd)) {
+        // Procesar petición completa
+        std::string rawRequest = _client_buffers[client_fd];
+        Request request(rawRequest);
+        Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
+        std::string httpResponse = response.toString();
+        
+        _pending_responses[client_fd] = httpResponse;
+        _active_clients.erase(client_fd);
+        
+        // Limpiar buffers
+        _client_buffers.erase(client_fd);
+        _expected_content_length.erase(client_fd);
+        _headers_complete.erase(client_fd);
+    }
+    // Si no está completa, seguir esperando más datos (se leerá en siguiente select)
+}
+
+// Extraer Content-Length de los headers
+size_t Server::extraerContentLength(const std::string& headers)
+{
+    size_t pos = headers.find("Content-Length:");
+    if (pos == std::string::npos)
+        return 0;
+    
+    size_t start = pos + 15; // Longitud de "Content-Length:"
+    size_t end = headers.find("\r\n", start);
+    
+    std::string value = headers.substr(start, end - start);
+    
+    // Limpiar espacios
+    while (!value.empty() && value[0] == ' ')
+        value = value.substr(1);
+    
+    return atoi(value.c_str());
+}
+
+// Verificar si tenemos la petición completa
+bool Server::peticionCompleta(int client_fd)
+{
+    size_t header_end = _client_buffers[client_fd].find("\r\n\r\n");
+    if (header_end == std::string::npos)
+        return false;
+    
+    size_t header_size = header_end + 4;
+    size_t body_received = _client_buffers[client_fd].length() - header_size;
+    size_t expected = _expected_content_length[client_fd];
+    
+    return body_received >= expected;
 }
 
 /*
@@ -221,6 +319,12 @@ void Server::ejecutar()
         }
         for (size_t i = 0; i < clients_to_write.size(); ++i) {
             int client_fd = clients_to_write[i];
+            
+            // Solo enviar si ya no hay bytes por descartar
+            if (_bytes_to_discard.find(client_fd) != _bytes_to_discard.end()) {
+                continue; // Esperar a que termine de descartar
+            }
+            
             std::string& response = _pending_responses[client_fd];
             
             ssize_t bytes_sent = send(client_fd, response.c_str(), response.length(), 0);
@@ -233,6 +337,8 @@ void Server::ejecutar()
             
             close(client_fd);
             _pending_responses.erase(client_fd);
+            _active_clients.erase(client_fd);
+            _bytes_to_discard.erase(client_fd);
         }
     }
 }

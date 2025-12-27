@@ -83,6 +83,13 @@ std::string Response::toString() const
     std::ostringstream response;
     response << "HTTP/1.1 " << _statusCode << " " << _statusMessage << "\r\n";
     
+    // Agregar Content-Length si no está presente
+    if (_headers.find("Content-Length") == _headers.end() && !_body.empty()) {
+        std::ostringstream length_stream;
+        length_stream << _body.length();
+        response << "Content-Length: " << length_stream.str() << "\r\n";
+    }
+    
     for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
          it != _headers.end(); ++it) {
         response << it->first << ": " << it->second << "\r\n";

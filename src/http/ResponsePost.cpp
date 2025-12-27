@@ -23,17 +23,45 @@ void Response::manejarPOST(const Request& request)
     if (path == "/autoindex")
     {
         std::string body = request.getBody();
+        
+        // Verificar si el body está vacío o si es un multipart sin archivo
+        // Cuando el formulario se envía sin seleccionar archivo, el body contiene
+        // solo los boundaries del multipart pero sin contenido real de archivo
         if (body.empty())
         {
             respuestaError(HttpStatus::BAD_REQUEST);
             return;
         }
         
-        std::time_t now = std::time(NULL);
-        std::ostringstream filename;
-        filename << "archivo_" << now << ".txt";
+        // Buscar el marcador de filename="" (sin archivo seleccionado)
+        // o verificar si después del boundary no hay datos reales
+        size_t filenamePos = body.find("filename=\"");
+        if (filenamePos != std::string::npos)
+        {
+            size_t filenameEnd = body.find("\"", filenamePos + 10);
+            if (filenameEnd != std::string::npos)
+            {
+                std::string filename = body.substr(filenamePos + 10, filenameEnd - (filenamePos + 10));
+                // Si el filename está vacío, no hay archivo
+                if (filename.empty())
+                {
+                    respuestaError(HttpStatus::BAD_REQUEST);
+                    return;
+                }
+            }
+        }
+        else
+        {
+            // Si no hay filename en el multipart, es un POST inválido
+            respuestaError(HttpStatus::BAD_REQUEST);
+            return;
+        }
         
-        std::string rutaArchivo = _documentRoot + "/autoindex/archivosSubidos/" + filename.str();
+        std::time_t now = std::time(NULL);
+        std::ostringstream filenameStream;
+        filenameStream << "archivo_" << now << ".txt";
+        
+        std::string rutaArchivo = _documentRoot + "/autoindex/archivosSubidos/" + filenameStream.str();
         std::ofstream file(rutaArchivo.c_str(), std::ios::binary);
         if (!file.is_open()) {
             respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);

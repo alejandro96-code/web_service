@@ -18,6 +18,12 @@ private:
     int _server_fd;
     std::set<int> _active_clients;
     std::map<int, std::string> _pending_responses;
+    
+    // Buffers acumulativos para peticiones grandes
+    std::map<int, std::string> _client_buffers;      // Buffer acumulado por cliente
+    std::map<int, size_t> _expected_content_length;  // Content-Length esperado
+    std::map<int, bool> _headers_complete;           // ¿Headers ya leídos?
+    std::map<int, size_t> _bytes_to_discard;         // Bytes que faltan por descartar (clientes rechazados)
 
 public:
     
@@ -35,6 +41,10 @@ private:
     bool vincularPuerto();
     bool escucharConexiones();
     void manejarCliente(int client_fd);
+    
+    // Métodos auxiliares
+    size_t extraerContentLength(const std::string& headers);
+    bool peticionCompleta(int client_fd);
 };
 
 #endif
