@@ -10,8 +10,11 @@ struct Location {
     std::vector<std::string> allow_methods;
     bool autoindex;
     std::string index;
+    bool has_redirect;
+    int redirect_code;
+    std::string redirect_url;
     
-    Location() : autoindex(false) {}
+    Location() : autoindex(false), has_redirect(false), redirect_code(0) {}
 };
 
 // Estructura para server

@@ -43,6 +43,16 @@ void Response::procesar(const Request& request)
         }
     }
     
+    // Verificar si hay redirección configurada para esta ruta
+    Location* loc = obtenerLocation(path);
+    if (loc != NULL && loc->has_redirect) {
+        _statusCode = loc->redirect_code;
+        _statusMessage = HttpStatus::getMessage(loc->redirect_code);
+        _headers["Location"] = loc->redirect_url;
+        _body = "";
+        return;
+    }
+    
     // Validar que el método está permitido para esta ruta
     if (!metodoPermitido(path, method)) {
         respuestaError(HttpStatus::METHOD_NOT_ALLOWED);

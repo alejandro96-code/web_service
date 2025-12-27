@@ -44,6 +44,16 @@ static bool parseLocation(std::ifstream& file, Location& location) {
         else if (key == "index") {
             iss >> location.index;
         }
+        else if (key == "return") {
+            int code;
+            std::string url;
+            iss >> code >> url;
+            if (code == 301 || code == 302) {
+                location.has_redirect = true;
+                location.redirect_code = code;
+                location.redirect_url = url;
+            }
+        }
     }
     
     return false;

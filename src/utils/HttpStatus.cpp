@@ -27,6 +27,8 @@ std::map<int, std::string> HttpStatus::initMessages()
 
     messages[200] = "OK";
     messages[201] = "Created";
+    messages[301] = "Moved Permanently";
+    messages[302] = "Found";
     messages[400] = "Bad Request";
     messages[403] = "Forbidden";
     messages[404] = "Not Found";
