@@ -32,7 +32,12 @@ public:
     
     // Métodos públicos
     void iniciar();
-    void ejecutar();
+    
+    // Getters para acceder a datos privados
+    int getServerFd() const { return _server_fd; }
+    std::set<int>& getActiveClients() { return _active_clients; }
+    std::map<int, std::string>& getPendingResponses() { return _pending_responses; }
+    void manejarClientePublic(int client_fd) { manejarCliente(client_fd); }
     
 private:
     // Métodos privados

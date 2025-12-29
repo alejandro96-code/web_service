@@ -92,10 +92,23 @@ bool Server::escucharConexiones() {
 
 void Server::iniciar()
 {
-    if (!crearSocket()) return;
-    if (!configurarSocket()) return;
-    if (!vincularPuerto()) return;
-    if (!escucharConexiones()) return;
+    if (!crearSocket()) {
+        std::cerr << "Error al crear socket para puerto " << _puerto << std::endl;
+        return;
+    }
+    if (!configurarSocket()) {
+        std::cerr << "Error al configurar socket para puerto " << _puerto << std::endl;
+        return;
+    }
+    if (!vincularPuerto()) {
+        std::cerr << "Error al vincular puerto " << _puerto << std::endl;
+        return;
+    }
+    if (!escucharConexiones()) {
+        std::cerr << "Error al escuchar en puerto " << _puerto << std::endl;
+        return;
+    }
+    std::cout << "✓ Servidor escuchando en puerto " << _puerto << std::endl;
 }
 
 /*
@@ -239,107 +252,5 @@ bool Server::peticionCompleta(int client_fd)
     return body_received >= expected;
 }
 
-/*
-    Ejecuccion del servidor:
-    1º  Preparamos 2 listas de vigilancia (FD_ZERO) debido a que usamos select()
-        una ista sera para ver quien tiene algo para leer y otra quien tiene listo algo para escribir.
-    2º  Añadimos el socket al servidor
-    3º  Añadimos una lista de cliente (active_clients) y la recorremos para saber si los cliente si esperan ser leidos
-    4º  Hacemos lo mismo con la lista de clientes con respuesta pendientes de escritura
-    5º  LLamamos al select con un timeout de 1 segundo 
-        (Es decir nuestro servidor "duerme") hasta 1 de lo siguiente:
-            - un cliente nuevo se conecte
-            - Un cliente envie datos (request)
-            - Un cliente este listo para recibir datos (response)
-            - Pase un segundo
-    6º  Verificacion de las conexiones y hacemos el non-blocking
-    7º  Leemios los datos de un cliente activo
-    8º  Escribimos la respuesta de correspondiente y la enviamos
-*/
-void Server::ejecutar()
-{
-    while (true) {
-        fd_set read_fds, write_fds;
-        FD_ZERO(&read_fds);
-        FD_ZERO(&write_fds);
-    
-        FD_SET(_server_fd, &read_fds);
-        int max_fd = _server_fd;
-        
-        for (std::set<int>::iterator it = _active_clients.begin(); it != _active_clients.end(); ++it) {
-            FD_SET(*it, &read_fds);
-            if (*it > max_fd) max_fd = *it;
-        }
-        
-        for (std::map<int, std::string>::iterator it = _pending_responses.begin(); 
-             it != _pending_responses.end(); ++it) {
-            FD_SET(it->first, &write_fds);
-            if (it->first > max_fd) max_fd = it->first;
-        }
-        struct timeval timeout;
-        timeout.tv_sec = 1;
-        timeout.tv_usec = 0;
-        
-        int activity = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
-        
-        if (activity < 0) {
-            std::cerr << "Error en select" << std::endl;
-            continue;
-        }
-        if (activity == 0) {
-            continue;
-        }
-    
-        if (FD_ISSET(_server_fd, &read_fds)) {
-            int client_fd = accept(_server_fd, NULL, NULL);
-            if (client_fd >= 0) {
-                if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1) {
-                    std::cerr << "Error configurando non-blocking en cliente" << std::endl;
-                    close(client_fd);
-                } else {
-                    _active_clients.insert(client_fd);
-                }
-            }
-        }
-        
-        std::set<int> clients_to_check = _active_clients;
-        for (std::set<int>::iterator it = clients_to_check.begin(); 
-             it != clients_to_check.end(); ++it) {
-            if (FD_ISSET(*it, &read_fds)) {
-                manejarCliente(*it);
-            }
-        }
-        
-        std::vector<int> clients_to_write;
-        for (std::map<int, std::string>::iterator it = _pending_responses.begin(); 
-             it != _pending_responses.end(); ++it) {
-            if (FD_ISSET(it->first, &write_fds)) {
-                clients_to_write.push_back(it->first);
-            }
-        }
-        for (size_t i = 0; i < clients_to_write.size(); ++i) {
-            int client_fd = clients_to_write[i];
-            
-            // Solo enviar si ya no hay bytes por descartar
-            if (_bytes_to_discard.find(client_fd) != _bytes_to_discard.end()) {
-                continue; // Esperar a que termine de descartar
-            }
-            
-            std::string& response = _pending_responses[client_fd];
-            
-            ssize_t bytes_sent = send(client_fd, response.c_str(), response.length(), 0);
-            
-            if (bytes_sent == -1) {
-                std::cerr << "Error al enviar respuesta" << std::endl;
-            } else if (bytes_sent == 0) {
-                std::cerr << "No se pudo enviar datos" << std::endl;
-            }
-            
-            close(client_fd);
-            _pending_responses.erase(client_fd);
-            _active_clients.erase(client_fd);
-            _bytes_to_discard.erase(client_fd);
-        }
-    }
-}
+// Nota: ejecutar() ahora está en main.cpp para manejar múltiples servidores
 
