@@ -20,6 +20,7 @@
 #include <sys/socket.h> // socket, bind, listen, accept, send, recv
 #include <netinet/in.h> // struct sockaddr_in, htons
 #include <unistd.h>     // close
+#include <sys/wait.h>   // waitpid para CGI
 
 // CONSTANTES
 #define BUFFER_SIZE 4096

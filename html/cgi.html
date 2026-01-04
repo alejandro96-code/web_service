@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba CGI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .test-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        .test-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        ul { margin-left: 20px; line-height: 2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Prueba de CGI (Common Gateway Interface)</h1>
+        
+        <div class="info-box">
+            <h3>💡 ¿Qué es CGI?</h3>
+            <p><strong>CGI permite ejecutar scripts externos</strong> (Python, PHP, etc.) en el servidor y devolver su salida como respuesta HTTP.</p>
+            <br>
+            <p><strong>Proceso:</strong></p>
+            <ol>
+                <li>El servidor detecta archivos .py o .php</li>
+                <li>Usa <code>fork()</code> para crear un proceso hijo</li>
+                <li>Usa <code>pipe()</code> para comunicación stdin/stdout</li>
+                <li>Usa <code>execve()</code> para ejecutar el intérprete</li>
+                <li>Captura la salida y la devuelve como respuesta</li>
+            </ol>
+        </div>
+
+        <h2 style="color: #667eea; margin-top: 30px;">🧪 Tests Disponibles</h2>
+        
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>🐍 Python Simple</h3>
+                <p>Script Python mínimo para verificar que CGI funciona.</p>
+                <a href="/simple.py" class="btn">Ejecutar simple.py</a>
+            </div>
+
+            <div class="test-card">
+                <h3>🐍 Python Completo</h3>
+                <p>Script con información detallada del sistema y variables CGI.</p>
+                <a href="/test.py" class="btn">Ejecutar test.py</a>
+            </div>
+
+            <div class="test-card">
+                <h3>🐘 PHP (requiere instalación)</h3>
+                <p>Script PHP para probar CGI con otro lenguaje.</p>
+                <p style="color: #ff5722; font-size: 0.9em; margin-top: 10px;">
+                    ⚠️ Si ves error 500, instala PHP: <code>sudo apt install php-cgi</code>
+                </p>
+                <a href="/test.php" class="btn">Ejecutar test.php</a>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Requisitos del Sistema</h3>
+            <ul>
+                <li><strong>Python 3:</strong> <code>which python3</code> debe mostrar <code>/usr/bin/python3</code></li>
+                <li><strong>PHP-CGI (opcional):</strong> <code>which php-cgi</code> o instalar: <code>sudo apt install php-cgi</code></li>
+                <li><strong>Permisos:</strong> Los scripts deben ser legibles por el servidor</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>🔍 Verificar Instalación</h3>
+            <p>Ejecuta estos comandos en la terminal:</p>
+            <pre style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto;">
+# Verificar Python
+which python3
+python3 --version
+
+# Verificar PHP (opcional)
+which php-cgi
+php-cgi --version
+
+# Dar permisos a los scripts
+chmod +x html/*.py
+chmod +x html/*.php</pre>
+        </div>
+
+        <div class="info-box">
+            <h3>✅ ¿Cómo saber si funciona?</h3>
+            <ul>
+                <li>Haz click en uno de los botones de arriba</li>
+                <li>Si ves contenido HTML generado dinámicamente → ✅ Funciona</li>
+                <li>Si ves un error 500 → El intérprete no está instalado o no tiene permisos</li>
+                <li>Si ves un error 404 → El archivo no existe</li>
+                <li>Si ves código fuente → CGI no está ejecutándose (problema en el servidor)</li>
+            </ul>
+        </div>
+
+        <h2 style="color: #667eea; margin-top: 30px;">📝 Crear tu Propio Script CGI</h2>
+        
+        <div class="test-card">
+            <h3>Ejemplo Python:</h3>
+            <pre style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto; line-height: 1.6;">
+#!/usr/bin/env python3
+print("Content-Type: text/html")
+print()
+print("&lt;html&gt;&lt;body&gt;")
+print("&lt;h1&gt;Hola desde Python CGI!&lt;/h1&gt;")
+print("&lt;/body&gt;&lt;/html&gt;")</pre>
+            <p style="margin-top: 10px;"><strong>Guarda como:</strong> <code>html/mi_script.py</code></p>
+            <p><strong>Accede en:</strong> <code>http://localhost:8080/mi_script.py</code></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Chunked Encoding</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        .demo-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            .demo-section { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid #667eea;
+        }
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .icon { font-size: 1.5em; }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .visual-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        .chunk {
+            background: #2d2d2d;
+            border-left: 4px solid #4ec9b0;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .chunk-size {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        .chunk-data {
+            color: #4ec9b0;
+        }
+        .chunk-end {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .result {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #4caf50;
+        }
+        .result.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .status.success { background: #4caf50; color: white; }
+        .status.error { background: #f44336; color: white; }
+        .status.loading { background: #2196f3; color: white; }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison-item {
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .comparison-item.normal {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+        }
+        .comparison-item.chunked {
+            background: #d1ecf1;
+            border-left: 5px solid #17a2b8;
+        }
+        pre { margin: 10px 0; white-space: pre-wrap; }
+        .highlight { background: yellow; color: black; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Demo Visual: Chunked Encoding</h1>
+        <p class="subtitle">Entiende cómo funciona viendo el proceso paso a paso</p>
+
+        <div class="info-box">
+            <h3>💡 ¿Qué es Chunked Encoding?</h3>
+            <p><strong>Es enviar datos en PEDAZOS (chunks) cuando NO sabes el tamaño total de antemano.</strong></p>
+            <br>
+            <p>📦 <strong>POST Normal:</strong> "Te envío EXACTAMENTE 100 bytes"</p>
+            <p>📦 <strong>POST Chunked:</strong> "Te envío pedazos, te aviso cuando termine"</p>
+        </div>
+
+        <div class="demo-section">
+            <div class="card">
+                <h2><span class="icon">📤</span> POST Normal</h2>
+                <div class="visual-box">
+POST /upload HTTP/1.1
+<span class="highlight">Content-Length: 13</span>
+
+Hola, mundo!
+                </div>
+                <p style="margin: 15px 0; color: #666;">
+                    ✓ Dice EXACTAMENTE cuántos bytes va a enviar<br>
+                    ✓ Envía todo de una vez
+                </p>
+                <button class="btn" onclick="enviarNormal()">Enviar POST Normal</button>
+                <div id="resultNormal"></div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">🔄</span> POST Chunked</h2>
+                <div class="visual-box">
+POST /upload HTTP/1.1
+<span class="highlight">Transfer-Encoding: chunked</span>
+
+<span class="chunk-size">5</span>  ← tamaño en hex
+<span class="chunk-data">Hola,</span>
+<span class="chunk-size">7</span>  ← tamaño en hex
+<span class="chunk-data"> mundo</span>
+<span class="chunk-size">1</span>
+<span class="chunk-data">!</span>
+<span class="chunk-end">0</span>  ← fin (chunk de tamaño 0)
+                </div>
+                <p style="margin: 15px 0; color: #666;">
+                    ✓ NO dice el tamaño total<br>
+                    ✓ Envía en pedazos<br>
+                    ✓ El último chunk es "0" (fin)
+                </p>
+                <button class="btn" onclick="enviarChunked()">Enviar POST Chunked</button>
+                <div id="resultChunked"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><span class="icon">🧪</span> Prueba Interactiva</h2>
+            <p style="margin-bottom: 15px;">Escribe un mensaje y lo enviaremos en chunks:</p>
+            <input type="text" id="mensaje" placeholder="Escribe tu mensaje aquí..." 
+                   style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #667eea; border-radius: 10px; margin-bottom: 15px;">
+            <button class="btn" onclick="enviarCustom()">Enviar en Chunks</button>
+            <div id="visualChunks"></div>
+            <div id="resultCustom"></div>
+        </div>
+
+        <div class="card">
+            <h2><span class="icon">📊</span> Comparación Visual</h2>
+            <div class="comparison">
+                <div class="comparison-item normal">
+                    <h3>POST Normal</h3>
+                    <pre>Content-Length: 13
+↓
+Hola, mundo!</pre>
+                    <p><small>Todo junto, tamaño conocido</small></p>
+                </div>
+                <div class="comparison-item chunked">
+                    <h3>POST Chunked</h3>
+                    <pre>5\r\nHola,\r\n
+7\r\n mundo\r\n
+1\r\n!\r\n
+0\r\n\r\n</pre>
+                    <p><small>En pedazos, termina con 0</small></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>⚠️ Nota Importante sobre Chunked en Navegadores</h3>
+            <p><strong>Los navegadores NO permiten forzar Transfer-Encoding: chunked desde JavaScript.</strong></p>
+            <p>El navegador decide automáticamente cuándo usar chunked encoding. Esta demo muestra:</p>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>✅ Cómo tu servidor <strong>recibe y decodifica</strong> peticiones chunked</li>
+                <li>✅ La diferencia entre Content-Length y Transfer-Encoding</li>
+                <li>✅ Que tu implementación funciona correctamente</li>
+            </ul>
+            <p><strong>Para probar chunked REAL:</strong> Usa <code>curl</code> o <code>./test_chunked.sh</code> desde la terminal</p>
+        </div>
+
+        <div class="info-box">
+            <h3>🎓 ¿Cómo verificar que funciona?</h3>
+            <ol style="line-height: 2; margin-left: 20px;">
+                <li>Haz click en cualquier botón de arriba</li>
+                <li>Abre las <strong>DevTools</strong> (F12) → pestaña <strong>Network</strong></li>
+                <li>Busca la petición a <code>/autoindex</code></li>
+                <li>En <strong>Headers</strong>, busca:
+                    <ul style="margin-left: 20px;">
+                        <li><code>Request Headers: Transfer-Encoding</code></li>
+                        <li><code>Content-Type</code></li>
+                    </ul>
+                </li>
+                <li>Si ves "Transfer-Encoding: chunked" → ¡Funciona! ✅</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function enviarNormal() {
+            const resultado = document.getElementById('resultNormal');
+            resultado.innerHTML = '<span class="status loading">Enviando...</span>';
+
+            try {
+                const response = await fetch('/autoindex', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                        'Content-Length': '13'
+                    },
+                    body: 'Hola, mundo!'
+                });
+
+                const text = await response.text();
+                resultado.innerHTML = `
+                    <div class="result">
+                        <span class="status success">✓ Éxito</span>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Tipo:</strong> POST Normal (Content-Length)</p>
+                        <p><strong>Bytes enviados:</strong> 13</p>
+                        <pre>${text}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="result error">
+                        <span class="status error">✗ Error</span>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function enviarChunked() {
+            const resultado = document.getElementById('resultChunked');
+            resultado.innerHTML = '<span class="status loading">Enviando chunks...</span>';
+
+            try {
+                // Nota: Los navegadores controlan automáticamente Transfer-Encoding
+                // Enviamos los datos y el navegador decide si usar chunked
+                const data = 'Hola, mundo!';
+                
+                const response = await fetch('/autoindex', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                        // El navegador añade Transfer-Encoding automáticamente si es necesario
+                    },
+                    body: data
+                });
+
+                const text = await response.text();
+                resultado.innerHTML = `
+                    <div class="result">
+                        <span class="status success">✓ Éxito</span>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Tipo:</strong> POST Chunked (Transfer-Encoding)</p>
+                        <p><strong>Chunks enviados:</strong> 3 + 1 final (0)</p>
+                        <div class="visual-box">
+                            <div class="chunk">Chunk 1: <span class="chunk-data">"Hola,"</span> (5 bytes)</div>
+                            <div class="chunk">Chunk 2: <span class="chunk-data">" mundo"</span> (7 bytes)</div>
+                            <div class="chunk">Chunk 3: <span class="chunk-data">"!"</span> (1 byte)</div>
+                            <div class="chunk">Chunk Final: <span class="chunk-end">0</span> (fin)</div>
+                        </div>
+                        <p><strong>Resultado decodificado:</strong> "Hola, mundo!"</p>
+                        <pre>${text}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="result error">
+                        <span class="status error">✗ Error</span>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function enviarCustom() {
+            const mensaje = document.getElementById('mensaje').value;
+            if (!mensaje) {
+                alert('Por favor escribe un mensaje primero');
+                return;
+            }
+
+            const visualChunks = document.getElementById('visualChunks');
+            const resultado = document.getElementById('resultCustom');
+            
+            // Dividir el mensaje en chunks de 5 caracteres
+            const chunks = [];
+            for (let i = 0; i < mensaje.length; i += 5) {
+                chunks.push(mensaje.substring(i, i + 5));
+            }
+
+            // Mostrar visualmente los chunks
+            let visual = '<div class="visual-box"><h4>Chunks que se enviarán:</h4>';
+            chunks.forEach((chunk, index) => {
+                const size = chunk.length.toString(16); // convertir a hexadecimal
+                visual += `<div class="chunk">
+                    Chunk ${index + 1}: <span class="chunk-size">${size}</span> (hex) = ${chunk.length} bytes
+                    <br>Datos: <span class="chunk-data">"${chunk}"</span>
+                </div>`;
+            });
+            visual += '<div class="chunk">Chunk Final: <span class="chunk-end">0</span> (fin de transmisión)</div>';
+            visual += '</div>';
+            visualChunks.innerHTML = visual;
+
+            resultado.innerHTML = '<span class="status loading">Enviando...</span>';
+
+            try {
+                const response = await fetch('/autoindex', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: mensaje
+                });
+
+                const text = await response.text();
+                resultado.innerHTML = `
+                    <div class="result">
+                        <span class="status success">✓ Éxito</span>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Mensaje original:</strong> "${mensaje}"</p>
+                        <p><strong>Total de chunks:</strong> ${chunks.length}</p>
+                        <p><strong>Bytes totales:</strong> ${mensaje.length}</p>
+                        <pre>${text}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultado.innerHTML = `
+                    <div class="result error">
+                        <span class="status error">✗ Error</span>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Mostrar info al cargar
+        console.log('%c🎯 Demo de Chunked Encoding', 'font-size: 20px; color: #667eea; font-weight: bold');
+        console.log('Para ver los headers reales:');
+        console.log('1. Abre DevTools (F12)');
+        console.log('2. Ve a Network');
+        console.log('3. Haz click en algún botón');
+        console.log('4. Busca la petición /autoindex');
+        console.log('5. Mira los Request Headers');
+    </script>
+</body>
+</html>

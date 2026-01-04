@@ -12,6 +12,7 @@ private:
     std::string _version;                           // HTTP/1.1
     std::map<std::string, std::string> _headers;    // Headers de la petición
     std::string _body;                              // Cuerpo de la petición (para POST)
+    bool _isChunked;                                // Transfer-Encoding: chunked
 
 public:
     
@@ -27,6 +28,10 @@ public:
     std::string getVersion() const;
     std::string getHeader(const std::string& key) const;
     std::string getBody() const;
+    bool isChunked() const;
+    
+    // Método estático para decodificar chunks
+    static std::string decodeChunkedBody(const std::string& chunkedData);
 };
 
 #endif

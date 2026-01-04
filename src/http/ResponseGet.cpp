@@ -49,6 +49,53 @@ void Response::manejarGET(const Request& request)
         respuestaError(HttpStatus::FORBIDDEN);
         return;
     }
+    
+    // Detectar si es un archivo CGI (.php, .py)
+    if (esCGI(rutaCompleta))
+    {
+        std::string salidaCGI = ejecutarCGI(rutaCompleta, request);
+        
+        if (salidaCGI.empty()) {
+            respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
+            return;
+        }
+        
+        // La salida CGI puede incluir headers HTTP
+        // Formato: "Content-Type: text/html\r\n\r\n<html>..."
+        size_t headerEnd = salidaCGI.find("\r\n\r\n");
+        
+        if (headerEnd != std::string::npos) {
+            // Parsear headers de la salida CGI
+            std::string headers = salidaCGI.substr(0, headerEnd);
+            std::string body = salidaCGI.substr(headerEnd + 4);
+            
+            // Extraer Content-Type si existe
+            size_t ctPos = headers.find("Content-Type:");
+            if (ctPos != std::string::npos) {
+                size_t ctEnd = headers.find("\r\n", ctPos);
+                std::string contentType = headers.substr(ctPos + 13, ctEnd - (ctPos + 13));
+                // Limpiar espacios
+                while (!contentType.empty() && contentType[0] == ' ')
+                    contentType = contentType.substr(1);
+                _headers["Content-Type"] = contentType;
+            } else {
+                _headers["Content-Type"] = "text/html";
+            }
+            
+            _statusCode = HttpStatus::OK;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
+            _body = body;
+        } else {
+            // No hay headers, toda la salida es el body
+            _statusCode = HttpStatus::OK;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
+            _headers["Content-Type"] = "text/html";
+            _body = salidaCGI;
+        }
+        return;
+    }
+    
+    // Archivo estático normal
     std::string contenido = leerArchivo(rutaCompleta);
     
     if (contenido.empty()) {

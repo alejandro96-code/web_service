@@ -133,6 +133,7 @@ void Server::manejarCliente(int client_fd)
         _expected_content_length.erase(client_fd);
         _headers_complete.erase(client_fd);
         _bytes_to_discard.erase(client_fd);
+        _is_chunked.erase(client_fd);
         return;
     }
     if (bytes_read == 0) {
@@ -142,6 +143,7 @@ void Server::manejarCliente(int client_fd)
         _expected_content_length.erase(client_fd);
         _headers_complete.erase(client_fd);
         _bytes_to_discard.erase(client_fd);
+        _is_chunked.erase(client_fd);
         return;
     }
     
@@ -168,35 +170,42 @@ void Server::manejarCliente(int client_fd)
             _headers_complete[client_fd] = true;
             std::string headers = _client_buffers[client_fd].substr(0, header_end);
             
-            // Extraer Content-Length
-            size_t content_length = extraerContentLength(headers);
-            _expected_content_length[client_fd] = content_length;
+            // Detectar si es chunked
+            _is_chunked[client_fd] = isTransferEncodingChunked(headers);
             
-            // VALIDAR LÍMITE INMEDIATAMENTE
-            if (content_length > _client_max_body_size) {
-                // Crear Request dummy para generar error 413 con template
-                std::string rawRequest = _client_buffers[client_fd];
-                Request request(rawRequest);
-                Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
-                std::string httpResponse = response.toString();
+            // Extraer Content-Length (solo si NO es chunked)
+            if (!_is_chunked[client_fd]) {
+                size_t content_length = extraerContentLength(headers);
+                _expected_content_length[client_fd] = content_length;
                 
-                // La validación en Response.cpp generará el 413 con template
-                _pending_responses[client_fd] = httpResponse;
-                
-                // Calcular cuántos bytes del body faltan por recibir y descartar
-                size_t header_end = _client_buffers[client_fd].find("\r\n\r\n");
-                size_t bytes_already_received = _client_buffers[client_fd].length() - (header_end + 4);
-                size_t bytes_remaining = content_length - bytes_already_received;
-                
-                // Marcar este cliente para descartar el resto de datos
-                _bytes_to_discard[client_fd] = bytes_remaining;
-                
-                // NO borrar _active_clients aquí - se borrará después de enviar
-                _client_buffers.erase(client_fd);
-                _expected_content_length.erase(client_fd);
-                _headers_complete.erase(client_fd);
-                return;
+                // VALIDAR LÍMITE INMEDIATAMENTE
+                if (content_length > _client_max_body_size) {
+                    // Crear Request dummy para generar error 413 con template
+                    std::string rawRequest = _client_buffers[client_fd];
+                    Request request(rawRequest);
+                    Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
+                    std::string httpResponse = response.toString();
+                    
+                    // La validación en Response.cpp generará el 413 con template
+                    _pending_responses[client_fd] = httpResponse;
+                    
+                    // Calcular cuántos bytes del body faltan por recibir y descartar
+                    size_t header_end = _client_buffers[client_fd].find("\r\n\r\n");
+                    size_t bytes_already_received = _client_buffers[client_fd].length() - (header_end + 4);
+                    size_t bytes_remaining = content_length - bytes_already_received;
+                    
+                    // Marcar este cliente para descartar el resto de datos
+                    _bytes_to_discard[client_fd] = bytes_remaining;
+                    
+                    // NO borrar _active_clients aquí - se borrará después de enviar
+                    _client_buffers.erase(client_fd);
+                    _expected_content_length.erase(client_fd);
+                    _headers_complete.erase(client_fd);
+                    _is_chunked.erase(client_fd);
+                    return;
+                }
             }
+            // Si es chunked, no validamos tamaño hasta decodificar
         }
     }
     
@@ -215,6 +224,7 @@ void Server::manejarCliente(int client_fd)
         _client_buffers.erase(client_fd);
         _expected_content_length.erase(client_fd);
         _headers_complete.erase(client_fd);
+        _is_chunked.erase(client_fd);
     }
     // Si no está completa, seguir esperando más datos (se leerá en siguiente select)
 }
@@ -245,11 +255,50 @@ bool Server::peticionCompleta(int client_fd)
     if (header_end == std::string::npos)
         return false;
     
+    // Si es chunked, verificar que tenemos todos los chunks
+    if (_is_chunked[client_fd]) {
+        size_t header_size = header_end + 4;
+        std::string body = _client_buffers[client_fd].substr(header_size);
+        return chunkedDataCompleta(body);
+    }
+    
+    // Si no es chunked, verificar Content-Length normal
     size_t header_size = header_end + 4;
     size_t body_received = _client_buffers[client_fd].length() - header_size;
     size_t expected = _expected_content_length[client_fd];
     
     return body_received >= expected;
+}
+
+// Detectar si Transfer-Encoding: chunked está presente en los headers
+bool Server::isTransferEncodingChunked(const std::string& headers)
+{
+    size_t pos = headers.find("Transfer-Encoding:");
+    if (pos == std::string::npos)
+        return false;
+    
+    size_t start = pos + 18; // Longitud de "Transfer-Encoding:"
+    size_t end = headers.find("\r\n", start);
+    
+    std::string value = headers.substr(start, end - start);
+    
+    // Buscar "chunked" en el valor
+    return value.find("chunked") != std::string::npos;
+}
+
+// Verificar si tenemos todos los chunks (último chunk es "0\r\n\r\n")
+bool Server::chunkedDataCompleta(const std::string& data)
+{
+    // Buscar el patrón de finalización: "0\r\n\r\n"
+    // El último chunk tiene tamaño 0
+    size_t pos = data.find("0\r\n\r\n");
+    if (pos != std::string::npos) {
+        return true;
+    }
+    
+    // También puede ser "0\r\n" seguido de trailers y luego "\r\n"
+    // pero por simplicidad, buscamos el patrón básico
+    return false;
 }
 
 // Nota: ejecutar() ahora está en main.cpp para manejar múltiples servidores
