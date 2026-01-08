@@ -1,4 +1,5 @@
 #include "Response.hpp"
+#include "ErrorHandler.hpp"
 #include <fstream>
 #include <sstream>
 #include <ctime>
@@ -29,7 +30,12 @@ void Response::manejarPOST(const Request& request)
         // solo los boundaries del multipart pero sin contenido real de archivo
         if (body.empty())
         {
-            respuestaError(HttpStatus::BAD_REQUEST);
+            _statusCode = HttpStatus::BAD_REQUEST;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         
@@ -45,7 +51,12 @@ void Response::manejarPOST(const Request& request)
                 // Si el filename está vacío, no hay archivo
                 if (filename.empty())
                 {
-                    respuestaError(HttpStatus::BAD_REQUEST);
+                    _statusCode = HttpStatus::BAD_REQUEST;
+                    _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
+                    ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                        _statusCode, _statusMessage, _errorPages);
+                    _body = errorResp.body;
+                    _headers["Content-Type"] = errorResp.contentType;
                     return;
                 }
             }
@@ -53,7 +64,12 @@ void Response::manejarPOST(const Request& request)
         else
         {
             // Si no hay filename en el multipart, es un POST inválido
-            respuestaError(HttpStatus::BAD_REQUEST);
+            _statusCode = HttpStatus::BAD_REQUEST;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         
@@ -64,7 +80,12 @@ void Response::manejarPOST(const Request& request)
         std::string rutaArchivo = _documentRoot + "/autoindex/archivosSubidos/" + filenameStream.str();
         std::ofstream file(rutaArchivo.c_str(), std::ios::binary);
         if (!file.is_open()) {
-            respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
+            _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         file.write(body.c_str(), body.length());
@@ -82,6 +103,11 @@ void Response::manejarPOST(const Request& request)
         _body = htmlTemplate;
     }
     else {
-        respuestaError(HttpStatus::NOT_FOUND);
+        _statusCode = HttpStatus::NOT_FOUND;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
     }
 }

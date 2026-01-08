@@ -1,5 +1,6 @@
 #include "Response.hpp"
 #include "FileUtils.hpp"
+#include "ErrorHandler.hpp"
 #include <fstream>
 #include <sstream>
 #include <cstdio>
@@ -26,18 +27,33 @@ void Response::manejarDELETE(const Request& request)
         std::ifstream checkFile(rutaCompleta.c_str());
         if (!checkFile.is_open())
         {
-            respuestaError(HttpStatus::NOT_FOUND);
+            _statusCode = HttpStatus::NOT_FOUND;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         checkFile.close();
         
         if (FileUtils::esDirectorio(rutaCompleta)) {
-            respuestaError(HttpStatus::FORBIDDEN);
+            _statusCode = HttpStatus::FORBIDDEN;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::FORBIDDEN);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         
         if (remove(rutaCompleta.c_str()) != 0) {
-            respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
+            _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         
@@ -52,6 +68,12 @@ void Response::manejarDELETE(const Request& request)
         _headers["Content-Type"] = "text/html";
         _body = htmlTemplate;
     }
-    else
-        respuestaError(HttpStatus::FORBIDDEN);
+    else {
+        _statusCode = HttpStatus::FORBIDDEN;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::FORBIDDEN);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
+    }
 }

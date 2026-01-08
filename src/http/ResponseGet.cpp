@@ -1,5 +1,7 @@
 #include "Response.hpp"
 #include "FileUtils.hpp"
+#include "LocationMatcher.hpp"
+#include "ErrorHandler.hpp"
 
 /*
     Peticion Get:
@@ -39,7 +41,7 @@ void Response::manejarGET(const Request& request)
             _body = contenido;
             return;
         }
-        if (tieneAutoindex(path))
+        if (LocationMatcher::tieneAutoindex(path, _locations))
         {
             _statusCode = HttpStatus::OK;
             _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
@@ -47,7 +49,12 @@ void Response::manejarGET(const Request& request)
             _body = Autoindex::generarHTML(rutaCompleta, path);
             return;
         }
-        respuestaError(HttpStatus::FORBIDDEN);
+        _statusCode = HttpStatus::FORBIDDEN;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::FORBIDDEN);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
         return;
     }
     
@@ -57,7 +64,12 @@ void Response::manejarGET(const Request& request)
         std::string salidaCGI = CGIHandler::ejecutarCGI(rutaCompleta, request);
         
         if (salidaCGI.empty()) {
-            respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
+            _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         
@@ -100,7 +112,12 @@ void Response::manejarGET(const Request& request)
     std::string contenido = FileUtils::leerArchivo(rutaCompleta);
     
     if (contenido.empty()) {
-        respuestaError(HttpStatus::NOT_FOUND);
+        _statusCode = HttpStatus::NOT_FOUND;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
         return;
     }
     

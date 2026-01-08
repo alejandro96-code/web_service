@@ -20,6 +20,8 @@ SRCS = 	main.cpp \
 		src/utils/Autoindex.cpp \
 		src/utils/HttpStatus.cpp \
 		src/utils/FileUtils.cpp \
+		src/utils/LocationMatcher.cpp \
+		src/utils/ErrorHandler.cpp \
 		src/cgi/CGIHandler.cpp
 
 # Archivos objeto (mantienen estructura de src/)

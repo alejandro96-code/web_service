@@ -13,7 +13,12 @@ Response::Response(const Request& request, const std::string& documentRoot,
         procesar(request);
     }
     catch (const std::exception& e) {
-        respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);
+        _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
     }
 }
 
@@ -27,7 +32,12 @@ void Response::procesar(const Request& request)
     
     // Validar que el método no esté vacío
     if (method.empty()) {
-        respuestaError(HttpStatus::BAD_REQUEST);
+        _statusCode = HttpStatus::BAD_REQUEST;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
         return;
     }
     
@@ -37,14 +47,19 @@ void Response::procesar(const Request& request)
         if (!contentLengthStr.empty()) {
             size_t contentLength = atoi(contentLengthStr.c_str());
             if (contentLength > _clientMaxBodySize) {
-                respuestaError(HttpStatus::PAYLOAD_TOO_LARGE);
+                _statusCode = HttpStatus::PAYLOAD_TOO_LARGE;
+                _statusMessage = HttpStatus::getMessage(HttpStatus::PAYLOAD_TOO_LARGE);
+                ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                    _statusCode, _statusMessage, _errorPages);
+                _body = errorResp.body;
+                _headers["Content-Type"] = errorResp.contentType;
                 return;
             }
         }
     }
     
     // Verificar si hay redirección configurada para esta ruta
-    Location* loc = obtenerLocation(path);
+    Location* loc = LocationMatcher::obtenerLocation(path, _locations);
     if (loc != NULL && loc->has_redirect) {
         _statusCode = loc->redirect_code;
         _statusMessage = HttpStatus::getMessage(loc->redirect_code);
@@ -54,8 +69,13 @@ void Response::procesar(const Request& request)
     }
     
     // Validar que el método está permitido para esta ruta
-    if (!metodoPermitido(path, method)) {
-        respuestaError(HttpStatus::METHOD_NOT_ALLOWED);
+    if (!LocationMatcher::metodoPermitido(path, method, _locations)) {
+        _statusCode = HttpStatus::METHOD_NOT_ALLOWED;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::METHOD_NOT_ALLOWED);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
         return;
     }
     
@@ -70,10 +90,20 @@ void Response::procesar(const Request& request)
     }
     else if (method == "PUT" || method == "PATCH" || method == "HEAD" || 
              method == "OPTIONS" || method == "TRACE" || method == "CONNECT") {
-        respuestaError(HttpStatus::NOT_IMPLEMENTED);
+        _statusCode = HttpStatus::NOT_IMPLEMENTED;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_IMPLEMENTED);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
     }
     else {
-        respuestaError(HttpStatus::BAD_REQUEST);
+        _statusCode = HttpStatus::BAD_REQUEST;
+        _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
     }
 }
 
@@ -97,76 +127,4 @@ std::string Response::toString() const
     
     response << "\r\n" << _body;
     return response.str();
-}
-
-// Verificar si la ruta tiene autoindex activado
-bool Response::tieneAutoindex(const std::string& path)
-{
-    Location* loc = obtenerLocation(path);
-    return (loc != NULL) ? loc->autoindex : false;
-}
-
-// Obtener la location que coincide con el path
-Location* Response::obtenerLocation(const std::string& path)
-{
-    Location* mejor = NULL;
-    size_t mayorLongitud = 0;
-    
-    for (size_t i = 0; i < _locations.size(); i++) {
-        std::string locPath = _locations[i].path;
-        if (path.find(locPath) == 0 && locPath.length() > mayorLongitud) {
-            mayorLongitud = locPath.length();
-            mejor = &_locations[i];
-        }
-    }
-    return mejor;
-}
-
-// Verificar si el método está permitido para esta ruta
-bool Response::metodoPermitido(const std::string& path, const std::string& method)
-{
-    Location* loc = obtenerLocation(path);
-    if (loc == NULL || loc->allow_methods.empty()) {
-        return true;
-    }
-    
-    for (size_t i = 0; i < loc->allow_methods.size(); i++) {
-        if (loc->allow_methods[i] == method) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Generar respuesta de error
-void Response::respuestaError(int codigo)
-{
-    _statusCode = codigo;
-    _statusMessage = HttpStatus::getMessage(codigo);
-    
-    std::map<int, std::string>::const_iterator it = _errorPages.find(codigo);
-    if (it != _errorPages.end()) {
-        // Si la ruta no empieza con '/', es relativa al documentRoot
-        std::string rutaError;
-        if (it->second[0] == '/') {
-            // Ruta absoluta desde la raíz del proyecto
-            rutaError = it->second.substr(1); // Quitar el '/' inicial
-        } else {
-            // Ruta relativa (puede estar en templates/ o html/)
-            rutaError = it->second;
-        }
-        
-        std::string contenido = FileUtils::leerArchivo(rutaError);
-        
-        if (!contenido.empty()) {
-            _body = contenido;
-            _headers["Content-Type"] = "text/html";
-            return;
-        }
-    }
-    
-    std::ostringstream html;
-    html << "<html><body><h1>" << codigo << " - " << _statusMessage << "</h1></body></html>";
-    _body = html.str();
-    _headers["Content-Type"] = "text/html";
 }

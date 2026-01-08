@@ -7,6 +7,8 @@
 #include "Autoindex.hpp"
 #include "HttpStatus.hpp"
 #include "FileUtils.hpp"
+#include "LocationMatcher.hpp"
+#include "ErrorHandler.hpp"
 #include "CGIHandler.hpp"
 
 class Response {
@@ -19,12 +21,6 @@ protected:
     std::map<int, std::string> _errorPages;
     std::vector<Location> _locations;
     size_t _clientMaxBodySize;
-
-    // Métodos auxiliares compartidos
-    bool tieneAutoindex(const std::string& path);
-    bool metodoPermitido(const std::string& path, const std::string& method);
-    Location* obtenerLocation(const std::string& path);
-    void respuestaError(int codigo);
 
 public:
     Response(const Request& request, const std::string& documentRoot, 
