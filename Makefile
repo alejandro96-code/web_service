@@ -19,6 +19,7 @@ SRCS = 	main.cpp \
 		src/http/ResponseDelete.cpp \
 		src/utils/Autoindex.cpp \
 		src/utils/HttpStatus.cpp \
+		src/utils/FileUtils.cpp \
 		src/cgi/CGIHandler.cpp
 
 # Archivos objeto (mantienen estructura de src/)

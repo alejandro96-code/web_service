@@ -99,43 +99,6 @@ std::string Response::toString() const
     return response.str();
 }
 
-// Leer archivo del sistema
-std::string Response::leerArchivo(const std::string& ruta)
-{
-    std::ifstream file(ruta.c_str());
-    if (!file.is_open()) {
-        return "";
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    file.close();
-    return buffer.str();
-}
-
-// Obtener Content-Type según extensión
-std::string Response::obtenerContentType(const std::string& extension)
-{
-    if (extension == ".html" || extension == ".htm") return "text/html";
-    if (extension == ".css") return "text/css";
-    if (extension == ".js") return "application/javascript";
-    if (extension == ".json") return "application/json";
-    if (extension == ".png") return "image/png";
-    if (extension == ".jpg" || extension == ".jpeg") return "image/jpeg";
-    if (extension == ".gif") return "image/gif";
-    if (extension == ".txt") return "text/plain";
-    return "application/octet-stream";
-}
-
-// Verificar si una ruta es un directorio
-bool Response::esDirectorio(const std::string& ruta)
-{
-    struct stat info;
-    if (stat(ruta.c_str(), &info) != 0) {
-        return false;
-    }
-    return S_ISDIR(info.st_mode);
-}
-
 // Verificar si la ruta tiene autoindex activado
 bool Response::tieneAutoindex(const std::string& path)
 {
@@ -193,7 +156,7 @@ void Response::respuestaError(int codigo)
             rutaError = it->second;
         }
         
-        std::string contenido = leerArchivo(rutaError);
+        std::string contenido = FileUtils::leerArchivo(rutaError);
         
         if (!contenido.empty()) {
             _body = contenido;
@@ -206,35 +169,4 @@ void Response::respuestaError(int codigo)
     html << "<html><body><h1>" << codigo << " - " << _statusMessage << "</h1></body></html>";
     _body = html.str();
     _headers["Content-Type"] = "text/html";
-}
-
-// Normalizar path eliminando barras duplicadas
-std::string Response::normalizarPath(const std::string& path)
-{
-    if (path.empty()) {
-        return "/";
-    }
-    
-    std::string resultado;
-    resultado.reserve(path.length());
-    
-    bool ultimaFueBarra = false;
-    for (size_t i = 0; i < path.length(); i++) {
-        if (path[i] == '/') {
-            if (!ultimaFueBarra) {
-                resultado += '/';
-                ultimaFueBarra = true;
-            }
-        } else {
-            resultado += path[i];
-            ultimaFueBarra = false;
-        }
-    }
-    
-    // Asegurar que empiece con /
-    if (resultado.empty() || resultado[0] != '/') {
-        resultado = "/" + resultado;
-    }
-    
-    return resultado;
 }

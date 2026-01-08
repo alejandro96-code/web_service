@@ -6,6 +6,7 @@
 #include "parseoConf.hpp"
 #include "Autoindex.hpp"
 #include "HttpStatus.hpp"
+#include "FileUtils.hpp"
 #include "CGIHandler.hpp"
 
 class Response {
@@ -20,14 +21,10 @@ protected:
     size_t _clientMaxBodySize;
 
     // Métodos auxiliares compartidos
-    std::string leerArchivo(const std::string& ruta);
-    std::string obtenerContentType(const std::string& extension);
-    bool esDirectorio(const std::string& ruta);
     bool tieneAutoindex(const std::string& path);
     bool metodoPermitido(const std::string& path, const std::string& method);
     Location* obtenerLocation(const std::string& path);
     void respuestaError(int codigo);
-    std::string normalizarPath(const std::string& path);
 
 public:
     Response(const Request& request, const std::string& documentRoot, 

@@ -1,4 +1,5 @@
 #include "Response.hpp"
+#include "FileUtils.hpp"
 
 /*
     Peticion Get:
@@ -19,17 +20,17 @@
 */
 void Response::manejarGET(const Request& request)
 {
-    std::string path = normalizarPath(request.getPath());
+    std::string path = FileUtils::normalizarPath(request.getPath());
     std::string rutaCompleta = _documentRoot + path;
     
-    if (esDirectorio(rutaCompleta))
+    if (FileUtils::esDirectorio(rutaCompleta))
     {
         std::string indexPath = rutaCompleta;
         if (indexPath[indexPath.length() - 1] != '/')
             indexPath += "/";
         indexPath += "index.html";
         
-        std::string contenido = leerArchivo(indexPath);
+        std::string contenido = FileUtils::leerArchivo(indexPath);
         if (!contenido.empty())
         {
             _statusCode = HttpStatus::OK;
@@ -96,7 +97,7 @@ void Response::manejarGET(const Request& request)
     }
     
     // Archivo estático normal
-    std::string contenido = leerArchivo(rutaCompleta);
+    std::string contenido = FileUtils::leerArchivo(rutaCompleta);
     
     if (contenido.empty()) {
         respuestaError(HttpStatus::NOT_FOUND);
@@ -110,6 +111,6 @@ void Response::manejarGET(const Request& request)
     }
     _statusCode = HttpStatus::OK;
     _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
-    _headers["Content-Type"] = obtenerContentType(extension);
+    _headers["Content-Type"] = FileUtils::obtenerContentType(extension);
     _body = contenido;
 }

@@ -1,4 +1,5 @@
 #include "Response.hpp"
+#include "FileUtils.hpp"
 #include <fstream>
 #include <sstream>
 #include <cstdio>
@@ -30,7 +31,7 @@ void Response::manejarDELETE(const Request& request)
         }
         checkFile.close();
         
-        if (esDirectorio(rutaCompleta)) {
+        if (FileUtils::esDirectorio(rutaCompleta)) {
             respuestaError(HttpStatus::FORBIDDEN);
             return;
         }
