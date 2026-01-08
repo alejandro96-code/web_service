@@ -114,7 +114,6 @@ void Request::parse(const std::string& rawRequest)
 // Getters
 std::string Request::getMethod() const {return _method;}
 std::string Request::getPath() const {return _path;}
-std::string Request::getVersion() const {return _version;}
 
 std::string Request::getHeader(const std::string& key) const {
     std::map<std::string, std::string>::const_iterator it = _headers.find(key);
@@ -125,8 +124,6 @@ std::string Request::getHeader(const std::string& key) const {
 }
 
 std::string Request::getBody() const {return _body;}
-
-bool Request::isChunked() const {return _isChunked;}
 
 std::string Request::decodeChunkedBody(const std::string& chunkedData)
 {

@@ -25,10 +25,8 @@ public:
     // Getters
     std::string getMethod() const;
     std::string getPath() const;
-    std::string getVersion() const;
     std::string getHeader(const std::string& key) const;
     std::string getBody() const;
-    bool isChunked() const;
     
     // Método estático para decodificar chunks
     static std::string decodeChunkedBody(const std::string& chunkedData);
