@@ -6,6 +6,7 @@
 #include "parseoConf.hpp"
 #include "Autoindex.hpp"
 #include "HttpStatus.hpp"
+#include "CGIHandler.hpp"
 
 class Response {
 protected:
@@ -27,11 +28,6 @@ protected:
     Location* obtenerLocation(const std::string& path);
     void respuestaError(int codigo);
     std::string normalizarPath(const std::string& path);
-    
-    // Métodos para CGI
-    bool esCGI(const std::string& path);
-    std::string obtenerInterpreterPath(const std::string& extension);
-    std::string ejecutarCGI(const std::string& scriptPath, const Request& request);
 
 public:
     Response(const Request& request, const std::string& documentRoot, 

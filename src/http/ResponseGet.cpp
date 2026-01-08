@@ -51,9 +51,9 @@ void Response::manejarGET(const Request& request)
     }
     
     // Detectar si es un archivo CGI (.php, .py)
-    if (esCGI(rutaCompleta))
+    if (CGIHandler::esCGI(rutaCompleta))
     {
-        std::string salidaCGI = ejecutarCGI(rutaCompleta, request);
+        std::string salidaCGI = CGIHandler::ejecutarCGI(rutaCompleta, request);
         
         if (salidaCGI.empty()) {
             respuestaError(HttpStatus::INTERNAL_SERVER_ERROR);

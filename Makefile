@@ -18,7 +18,8 @@ SRCS = 	main.cpp \
 		src/http/ResponsePost.cpp \
 		src/http/ResponseDelete.cpp \
 		src/utils/Autoindex.cpp \
-		src/utils/HttpStatus.cpp
+		src/utils/HttpStatus.cpp \
+		src/cgi/CGIHandler.cpp
 
 # Archivos objeto (mantienen estructura de src/)
 OBJS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
