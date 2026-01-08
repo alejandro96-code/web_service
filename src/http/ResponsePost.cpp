@@ -24,6 +24,7 @@ void Response::manejarPOST(const Request& request)
     if (path == "/autoindex")
     {
         std::string body = request.getBody();
+        std::string contentType = request.getHeader("Content-Type");
         
         // Verificar si el body está vacío o si es un multipart sin archivo
         // Cuando el formulario se envía sin seleccionar archivo, el body contiene
@@ -39,38 +40,43 @@ void Response::manejarPOST(const Request& request)
             return;
         }
         
-        // Buscar el marcador de filename="" (sin archivo seleccionado)
-        // o verificar si después del boundary no hay datos reales
-        size_t filenamePos = body.find("filename=\"");
-        if (filenamePos != std::string::npos)
+        // SOLO validar filename si es multipart/form-data
+        // Si es POST normal (Content-Length) sin multipart, aceptar el body directamente
+        if (contentType.find("multipart/form-data") != std::string::npos)
         {
-            size_t filenameEnd = body.find("\"", filenamePos + 10);
-            if (filenameEnd != std::string::npos)
+            // Buscar el marcador de filename="" (sin archivo seleccionado)
+            // o verificar si después del boundary no hay datos reales
+            size_t filenamePos = body.find("filename=\"");
+            if (filenamePos != std::string::npos)
             {
-                std::string filename = body.substr(filenamePos + 10, filenameEnd - (filenamePos + 10));
-                // Si el filename está vacío, no hay archivo
-                if (filename.empty())
+                size_t filenameEnd = body.find("\"", filenamePos + 10);
+                if (filenameEnd != std::string::npos)
                 {
-                    _statusCode = HttpStatus::BAD_REQUEST;
-                    _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
-                    ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
-                        _statusCode, _statusMessage, _errorPages);
-                    _body = errorResp.body;
-                    _headers["Content-Type"] = errorResp.contentType;
-                    return;
+                    std::string filename = body.substr(filenamePos + 10, filenameEnd - (filenamePos + 10));
+                    // Si el filename está vacío, no hay archivo
+                    if (filename.empty())
+                    {
+                        _statusCode = HttpStatus::BAD_REQUEST;
+                        _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
+                        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                            _statusCode, _statusMessage, _errorPages);
+                        _body = errorResp.body;
+                        _headers["Content-Type"] = errorResp.contentType;
+                        return;
+                    }
                 }
             }
-        }
-        else
-        {
-            // Si no hay filename en el multipart, es un POST inválido
-            _statusCode = HttpStatus::BAD_REQUEST;
-            _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
-                _statusCode, _statusMessage, _errorPages);
-            _body = errorResp.body;
-            _headers["Content-Type"] = errorResp.contentType;
-            return;
+            else
+            {
+                // Si es multipart pero no hay filename, es un POST inválido
+                _statusCode = HttpStatus::BAD_REQUEST;
+                _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
+                ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                    _statusCode, _statusMessage, _errorPages);
+                _body = errorResp.body;
+                _headers["Content-Type"] = errorResp.contentType;
+                return;
+            }
         }
         
         std::time_t now = std::time(NULL);
