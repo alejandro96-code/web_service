@@ -240,16 +240,6 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
             tiene_error = true;
         }
         
-        // Validar root
-        if (servers[i].root.empty()) {
-            tiene_error = true;
-        }
-        
-        // Validar index
-        if (servers[i].index.empty()) {
-            tiene_error = true;
-        }
-        
         // Si hay algún error en este servidor, mostrar mensaje y retornar vacío
         if (tiene_error) {
             std::cerr << ERROR_NO_CARGAR << std::endl;
