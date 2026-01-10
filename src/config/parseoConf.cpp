@@ -9,55 +9,6 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-// Función para parsear y validar client_max_body_size
-static size_t parseClientMaxBodySize(const std::string& value) {
-    // 1. Verificar vacío
-    if (value.empty()) {
-        std::cerr << "Error: client_max_body_size vacío, usando 1M por defecto" << std::endl;
-        return 1048576;  // 1MB por defecto
-    }
-    
-    // 2. Extraer número
-    int numero = atoi(value.c_str());
-    if (numero <= 0) {
-        std::cerr << "Error: client_max_body_size inválido '" << value << "', usando 1M por defecto" << std::endl;
-        return 1048576;
-    }
-    
-    // 3. Verificar unidad
-    char unit = value[value.length() - 1];
-    size_t size = 0;
-    
-    if (unit == 'M' || unit == 'm') {
-        size = (size_t)numero * 1024 * 1024;
-    } 
-    else if (unit == 'G' || unit == 'g') {
-        if (numero > 10) {  // Limitar a 10GB
-            std::cerr << "Advertencia: client_max_body_size muy grande, limitando a 10G" << std::endl;
-            return (size_t)10 * 1024 * 1024 * 1024;
-        }
-        size = (size_t)numero * 1024 * 1024 * 1024;
-    } 
-    else if (unit == 'K' || unit == 'k') {
-        size = (size_t)numero * 1024;
-    } 
-    else if (isdigit(unit)) {  // Sin unidad = bytes
-        size = numero;
-    }
-    else {  // Unidad inválida
-        std::cerr << "Error: Unidad inválida '" << unit << "' en client_max_body_size, use M, G o K. Usando 1M por defecto" << std::endl;
-        return 1048576;
-    }
-    
-    // 4. Validar rango mínimo
-    if (size < 1024) {
-        std::cerr << "Advertencia: client_max_body_size muy pequeño (" << size << " bytes), usando 1K como mínimo" << std::endl;
-        return 1024;
-    }
-    
-    return size;
-}
-
 // Parsear bloque location
 static bool parseLocation(std::ifstream& file, Location& location) {
     std::string linea;
@@ -167,7 +118,19 @@ static bool parseServer(std::ifstream& file, ServerConfig& server) {
         else if (key == "client_max_body_size") {
             std::string value;
             iss >> value;
-            server.client_max_body_size = parseClientMaxBodySize(value);
+            // Parsear tamaño: 10M, 1G, 500K
+            size_t size = 0;
+            char unit = value[value.length() - 1];
+            if (unit == 'M' || unit == 'm') {
+                size = atoi(value.c_str()) * 1024 * 1024;
+            } else if (unit == 'G' || unit == 'g') {
+                size = atoi(value.c_str()) * 1024 * 1024 * 1024;
+            } else if (unit == 'K' || unit == 'k') {
+                size = atoi(value.c_str()) * 1024;
+            } else {
+                size = atoi(value.c_str());
+            }
+            server.client_max_body_size = size;
         }
     }
     
@@ -215,7 +178,18 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
             if (key == "client_max_body_size") {
                 std::string value;
                 iss >> value;
-                http_client_max_body_size = parseClientMaxBodySize(value);
+                size_t size = 0;
+                char unit = value[value.length() - 1];
+                if (unit == 'M' || unit == 'm') {
+                    size = atoi(value.c_str()) * 1024 * 1024;
+                } else if (unit == 'G' || unit == 'g') {
+                    size = atoi(value.c_str()) * 1024 * 1024 * 1024;
+                } else if (unit == 'K' || unit == 'k') {
+                    size = atoi(value.c_str()) * 1024;
+                } else {
+                    size = atoi(value.c_str());
+                }
+                http_client_max_body_size = size;
             }
         }
         
@@ -258,6 +232,11 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
         
         // Validar listen (port)
         if (servers[i].port <= 0 || servers[i].port > 65535) {
+            tiene_error = true;
+        }
+        
+        // Validar server_name
+        if (servers[i].server_name.empty()) {
             tiene_error = true;
         }
         
