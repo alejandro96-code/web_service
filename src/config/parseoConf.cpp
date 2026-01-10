@@ -98,7 +98,30 @@ static bool parseServer(std::ifstream& file, ServerConfig& server) {
         iss >> key;
         
         if (key == "listen") {
-            iss >> server.port;
+            std::string port_str;
+            if (iss >> port_str) {
+                // Validar que sea un número
+                bool es_numero = true;
+                for (size_t i = 0; i < port_str.length(); i++) {
+                    if (!isdigit(port_str[i])) {
+                        es_numero = false;
+                        break;
+                    }
+                }
+                
+                if (!es_numero) {
+                    server.port = -1; // Marcar como inválido
+                } else {
+                    server.port = atoi(port_str.c_str());
+                    // Validar rango de puerto
+                    if (server.port == 0 || server.port > 65535) {
+                        server.port = -1; // Marcar como inválido
+                    }
+                }
+            } else {
+                // Sin valor: puerto predefinido 8080
+                server.port = 8080;
+            }
         }
         else if (key == "server_name") {
             iss >> server.server_name;
@@ -232,21 +255,6 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
         
         // Validar listen (port)
         if (servers[i].port <= 0 || servers[i].port > 65535) {
-            tiene_error = true;
-        }
-        
-        // Validar server_name
-        if (servers[i].server_name.empty()) {
-            tiene_error = true;
-        }
-        
-        // Validar root
-        if (servers[i].root.empty()) {
-            tiene_error = true;
-        }
-        
-        // Validar index
-        if (servers[i].index.empty()) {
             tiene_error = true;
         }
         
