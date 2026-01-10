@@ -83,6 +83,7 @@ void Response::procesar(const Request& request)
     
     // Validar tamaño del body solo para POST (único método implementado que acepta body)
     if (method == "POST") {
+        // Primero validar Content-Length si está presente
         std::string contentLengthStr = request.getHeader("Content-Length");
         if (!contentLengthStr.empty()) {
             size_t contentLength = atoi(contentLengthStr.c_str());
@@ -95,6 +96,20 @@ void Response::procesar(const Request& request)
                 _headers["Content-Type"] = errorResp.contentType;
                 return;
             }
+        }
+        
+        // También validar el tamaño real del body (importante para chunked)
+        // El body ya está decodificado en Request.cpp
+        size_t actualBodySize = request.getBody().length();
+        if (actualBodySize > _clientMaxBodySize) {
+            _statusCode = HttpStatus::PAYLOAD_TOO_LARGE;
+            _statusMessage = HttpStatus::getMessage(HttpStatus::PAYLOAD_TOO_LARGE);
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                _statusCode, _statusMessage, _errorPages);
+            _body = errorResp.body;
+            _headers["Content-Type"] = errorResp.contentType;
+            _headers["Connection"] = "close";
+            return;
         }
     }
     

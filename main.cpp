@@ -54,9 +54,14 @@ int main(int argc, char *argv[]) {
         // Añadir todos los clientes activos de todos los servidores
         for (size_t i = 0; i < servidores.size(); i++) {
             std::set<int>& clients = servidores[i]->getActiveClients();
+            std::map<int, std::string>& pending = servidores[i]->getPendingResponses();
+            
             for (std::set<int>::iterator it = clients.begin(); it != clients.end(); ++it) {
-                FD_SET(*it, &read_fds);
-                if (*it > max_fd) max_fd = *it;
+                // Solo agregar para lectura si NO tiene respuesta pendiente
+                if (pending.find(*it) == pending.end()) {
+                    FD_SET(*it, &read_fds);
+                    if (*it > max_fd) max_fd = *it;
+                }
             }
         }
         

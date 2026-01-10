@@ -23,7 +23,6 @@ private:
     std::map<int, std::string> _client_buffers;      // Buffer acumulado por cliente
     std::map<int, size_t> _expected_content_length;  // Content-Length esperado
     std::map<int, bool> _headers_complete;           // ¿Headers ya leídos?
-    std::map<int, size_t> _bytes_to_discard;         // Bytes que faltan por descartar (clientes rechazados)
     std::map<int, bool> _is_chunked;                 // ¿Cliente usando Transfer-Encoding: chunked?
 
 public:
@@ -53,6 +52,7 @@ private:
     bool peticionCompleta(int client_fd);
     bool isTransferEncodingChunked(const std::string& headers);
     bool chunkedDataCompleta(const std::string& data);
+    std::string decodeChunkedForValidation(const std::string& chunkedData);
 };
 
 #endif
