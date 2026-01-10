@@ -28,33 +28,33 @@
     </nav>
 
     <div class="container mt-5 mb-5">
-        <h1 class="mb-4">🚀 Prueba de CGI (Common Gateway Interface)</h1>
+        <h1 class="mb-4">CGI (Common Gateway Interface)</h1>
         
         <!-- Información sobre CGI -->
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">💡 ¿Qué es CGI?</h5>
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">¿Qué es CGI?</h5>
             </div>
             <div class="card-body">
                 <p><strong>CGI permite ejecutar scripts externos</strong> (Python, PHP, etc.) en el servidor y devolver su salida como respuesta HTTP.</p>
                 <h6 class="mt-3 fw-bold">Proceso:</h6>
                 <ol>
                     <li>El servidor detecta archivos .py o .php</li>
-                    <li>Usa <code>fork()</code> para crear un proceso hijo</li>
-                    <li>Usa <code>pipe()</code> para comunicación stdin/stdout</li>
-                    <li>Usa <code>execve()</code> para ejecutar el intérprete</li>
+                    <li>Usa <strong>fork()</strong> para crear un proceso hijo</li>
+                    <li>Usa <strong>pipe()</strong> para comunicación stdin/stdout</li>
+                    <li>Usa <strong>execve()</strong> para ejecutar el intérprete</li>
                     <li>Captura la salida y la devuelve como respuesta</li>
                 </ol>
             </div>
         </div>
 
         <!-- Tests disponibles -->
-        <h3 class="mb-3">🧪 Tests Disponibles</h3>
+        <h3 class="mb-3">Tests Disponibles</h3>
         <div class="row">
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">🐍 Python Simple</h5>
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Python Simple</h5>
                     </div>
                     <div class="card-body">
                         <p>Script Python mínimo para verificar que CGI funciona.</p>
@@ -65,59 +65,31 @@
 
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">🐍 Python Completo</h5>
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Python Completo</h5>
                     </div>
                     <div class="card-body">
                         <p>Script con información detallada del sistema y variables CGI.</p>
-                        <a href="/test.py" class="btn btn-info w-100">Ejecutar test.py</a>
+                        <a href="/test.py" class="btn btn-success w-100">Ejecutar test.py</a>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">🐘 PHP</h5>
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">PHP</h5>
                     </div>
                     <div class="card-body">
                         <p>Script PHP para probar CGI con otro lenguaje.</p>
-                        <p class="text-danger small">⚠️ Si ves error 500, instala PHP: <code>sudo apt install php-cgi</code></p>
-                        <a href="/test.php" class="btn btn-warning w-100">Ejecutar test.php</a>
+                        <a href="/test.php" class="btn btn-success w-100">Ejecutar test.php</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Requisitos -->
-        <div class="alert alert-warning mb-4" role="alert">
-            <h5 class="alert-heading">⚠️ Requisitos del Sistema</h5>
-            <ul class="mb-0">
-                <li><strong>Python 3:</strong> <code>which python3</code> debe mostrar <code>/usr/bin/python3</code></li>
-                <li><strong>PHP-CGI (opcional):</strong> <code>which php-cgi</code> o instalar: <code>sudo apt install php-cgi</code></li>
-                <li><strong>Permisos:</strong> Los scripts deben ser legibles por el servidor</li>
-            </ul>
-        </div>
-
         <div class="info-box">
-            <h3>🔍 Verificar Instalación</h3>
-            <p>Ejecuta estos comandos en la terminal:</p>
-            <pre style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto;">
-# Verificar Python
-which python3
-python3 --version
-
-# Verificar PHP (opcional)
-which php-cgi
-php-cgi --version
-
-# Dar permisos a los scripts
-chmod +x html/*.py
-chmod +x html/*.php</pre>
-        </div>
-
-        <div class="info-box">
-            <h3>✅ ¿Cómo saber si funciona?</h3>
+            <h3>¿Cómo saber si funciona?</h3>
             <ul>
                 <li>Haz click en uno de los botones de arriba</li>
                 <li>Si ves contenido HTML generado dinámicamente → ✅ Funciona</li>
@@ -125,25 +97,6 @@ chmod +x html/*.php</pre>
                 <li>Si ves un error 404 → El archivo no existe</li>
                 <li>Si ves código fuente → CGI no está ejecutándose (problema en el servidor)</li>
             </ul>
-        </div>
-
-
-        <!-- Crear tu propio script -->
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">📝 Crear tu Propio Script CGI</h5>
-            </div>
-            <div class="card-body">
-                <h6 class="fw-bold">Ejemplo Python:</h6>
-                <pre class="bg-dark text-light p-3 rounded">#!/usr/bin/env python3
-print("Content-Type: text/html")
-print()
-print("&lt;html&gt;&lt;body&gt;")
-print("&lt;h1&gt;Hola desde Python CGI!&lt;/h1&gt;")
-print("&lt;/body&gt;&lt;/html&gt;")</pre>
-                <p class="mb-1"><strong>Guarda como:</strong> <code>html/mi_script.py</code></p>
-                <p class="mb-0"><strong>Accede en:</strong> <code>http://localhost:8080/mi_script.py</code></p>
-            </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>

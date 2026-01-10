@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-print("Content-Type: text/html")
-print()
 print("<!DOCTYPE html>")
 print("<html lang='es'>")
 print("<head>")

@@ -149,7 +149,7 @@
                 <li>La diferencia entre Content-Length y Transfer-Encoding</li>
                 <li>Que tu implementación funciona correctamente</li>
             </ul>
-            <p class="mb-0"><strong>Para probar chunked REAL:</strong> Usa <code>curl</code> o <code>./test_chunked.sh</code> desde la terminal</p>
+            <p class="mb-0"><strong>Para probar chunked REAL:</strong> Usa <strong>curl</strong> o <strong>./test_chunked.sh</strong> desde la terminal</p>
         </div>
 
         <!-- Cómo verificar -->
@@ -161,11 +161,11 @@
                 <ol>
                     <li>Haz click en cualquier botón de arriba</li>
                     <li>Abre las <strong>DevTools</strong> (F12) → pestaña <strong>Network</strong></li>
-                    <li>Busca la petición a <code>/autoindex</code></li>
+                    <li>Busca la petición a <strong>/autoindex</strong></li>
                     <li>En <strong>Headers</strong>, busca:
                         <ul>
-                            <li><code>Request Headers: Transfer-Encoding</code></li>
-                            <li><code>Content-Type</code></li>
+                            <li><strong>Request Headers: Transfer-Encoding</strong></li>
+                            <li><strong>Content-Type</strong></li>
                         </ul>
                     </li>
                     <li>Si ves "Transfer-Encoding: chunked" → ¡Funciona! </li>
