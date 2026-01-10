@@ -8,55 +8,142 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
+    <!-- Barra de navegación estilo navegador -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🌐 Web Service</span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/autoindex">Autoindex</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/formupload.html">Subir Archivos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/delete_file.html">Eliminar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/chunked.html">Chunked</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cgi.html">CGI</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <div class="container mt-5">
         <h1 class="mb-4">Web Service</h1>
         
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Autoindex</h5>
-                        <a href="/autoindex" class="btn btn-primary">Ver /autoindex</a>
-                    </div>
-                </div>
+        <!-- Descripción del Web Service -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">¿Qué es un Web Service?</h4>
             </div>
-            
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Subir Archivos</h5>
-                        <a href="/formupload.html" class="btn btn-primary">Ir al formulario</a>
-                    </div>
-                </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    Un servidor web es un software que procesa solicitudes HTTP del cliente (navegador) y responde con 
+                    recursos como páginas HTML, imágenes, archivos, etc. Este proyecto implementa un servidor HTTP/1.1 
+                    compatible con las especificaciones estándar, capaz de servir contenido estático, manejar CGI, 
+                    realizar operaciones CRUD y gestionar múltiples conexiones simultáneas.
+                </p>
             </div>
+        </div>
 
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Eliminar archivos</h5>
-                        <a href="/delete_file.html" class="btn btn-primary">eliminar</a>
+                <!-- Descripción del proyecto -->
+        <div class="card mt-5 mb-5">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Cómo Funciona el Proyecto</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">🔧 Arquitectura</h6>
+                        <ul>
+                            <li>Servidor HTTP/1.1 escrito en C++</li>
+                            <li>Multiplexación I/O con <code>select()</code></li>
+                            <li>Gestión de múltiples servidores virtuales</li>
+                            <li>Sistema de configuración tipo NGINX</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">⚙️ Características</h6>
+                        <ul>
+                            <li>Métodos HTTP: GET, POST, DELETE</li>
+                            <li>Soporte para CGI (Python, PHP)</li>
+                            <li>Transferencia chunked encoding</li>
+                            <li>Páginas de error personalizadas</li>
+                            <li>Autoindex de directorios</li>
+                            <li>Redirecciones HTTP</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <p class="mb-0 text-muted">
+                    <small>
+                        El servidor procesa cada petición parseando la solicitud HTTP, buscando la ubicación 
+                        (location) correspondiente en la configuración, validando permisos de métodos permitidos, 
+                        y finalmente ejecutando la lógica apropiada (servir archivo estático, ejecutar CGI, o 
+                        realizar operación de archivo).
+                    </small>
+                </p>
+            </div>
+        </div>
+
+        <!-- Estados de Código HTTP -->
+        <div class="card mb-5">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Códigos de Estado HTTP</h4>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">
+                    Los códigos de estado HTTP indican el resultado de una solicitud. Se dividen en varias categorías:
+                    <strong>2xx (Éxito)</strong>, <strong>3xx (Redirección)</strong>, <strong>4xx (Errores del cliente)</strong> y <strong>5xx (Errores del servidor)</strong>.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-success">✅ Códigos de Éxito (2xx)</h6>
+                        <ul>
+                            <li><code>200 OK</code> - La solicitud se procesó correctamente y se devuelve el contenido</li>
+                            <li><code>201 Created</code> - El recurso se creó exitosamente (POST)</li>
+                            <li><code>204 No Content</code> - La solicitud se procesó correctamente pero no hay contenido que devolver (DELETE)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-info">🔄 Códigos de Redirección (3xx)</h6>
+                        <ul>
+                            <li><code>301 Moved Permanently</code> - El recurso se ha movido permanentemente a otra URL</li>
+                            <li><code>302 Found</code> - Redirección temporal a otra URL</li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-warning">🔴 Errores del Cliente (4xx)</h6>
+                        <ul>
+                            <li><code>400 Bad Request</code> - La sintaxis de la solicitud es incorrecta o malformada</li>
+                            <li><code>403 Forbidden</code> - El servidor entiende la petición pero se niega a autorizarla</li>
+                            <li><code>404 Not Found</code> - El recurso solicitado no existe en el servidor</li>
+                            <li><code>405 Method Not Allowed</code> - El método HTTP no está permitido para este recurso</li>
+                            <li><code>413 Payload Too Large</code> - El cuerpo de la solicitud supera el tamaño máximo permitido</li>
+                            <li><code>418 I'm a teapot</code> - Código de broma del protocolo HTCPCP (RFC 2324)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-danger">💥 Errores del Servidor (5xx)</h6>
+                        <ul>
+                            <li><code>500 Internal Server Error</code> - Error genérico del servidor al procesar la solicitud</li>
+                            <li><code>501 Not Implemented</code> - El servidor no soporta la funcionalidad requerida</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Prueba Chunked</h5>
-                        <a href="/chunked.html" class="btn btn-primary">Probar</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">CGI</h5>
-                        <a href="/cgi.html" class="btn btn-primary">Ver</a>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>

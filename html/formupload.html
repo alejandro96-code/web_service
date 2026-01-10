@@ -7,19 +7,57 @@
      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
+    <!-- Barra de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a href="/" class="navbar-brand mb-0 h1">🌐 Web Service</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/autoindex">Autoindex</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/formupload.html">Subir Archivos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/delete_file.html">Eliminar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chunked.html">Chunked</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/cgi.html">CGI</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <div class="container mt-5">
         <h1 class="mb-4">Subir Archivos</h1>
         
+        <!-- Información -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Información de Subida</h5>
+            </div>
+            <div class="card-body">
+                <p>Utiliza este formulario para subir archivos al servidor mediante el método <strong>POST</strong> con <strong>multipart/form-data</strong>.</p>
+                <ul>
+                    <li>Los archivos se guardarán en el directorio <strong>/autoindex</strong></li>
+                    <li>El tamaño máximo está definido por <strong>client_max_body_size</strong></li>
+                    <li>El servidor devuelve código <strong>201 Created</strong> si tiene éxito</li>
+                </ul>
+            </div>
+        </div>
+        
         <!-- Formulario de subida -->
         <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Formulario de Subida</h5>
+            </div>
             <div class="card-body">
                 <form action="/autoindex" method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="archivo" class="form-label">Selecciona un archivo:</label>
-                        <input type="file" name="archivo" id="archivo" class="form-control">
+                        <input type="file" name="archivo" id="archivo" class="form-control" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Subir</button>
-                    <a href="/" class="btn btn-secondary">Volver al inicio</a>
+                    <button type="submit" class="btn btn-primary">Subir Archivo</button>
+                    <a href="/autoindex" class="btn btn-secondary">Ver Archivos</a>
                 </form>
             </div>
         </div>

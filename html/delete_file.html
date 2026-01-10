@@ -7,21 +7,59 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
+    <!-- Barra de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a href="/" class="navbar-brand mb-0 h1">🌐 Web Service</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/autoindex">Autoindex</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/formupload.html">Subir Archivos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/delete_file.html">Eliminar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chunked.html">Chunked</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/cgi.html">CGI</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <div class="container mt-5">
+        <h1 class="mb-4">Eliminar Archivos</h1>
+        
+        <!-- Información -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Método DELETE</h5>
+            </div>
+            <div class="card-body">
+                <p>Este formulario utiliza el método HTTP <strong>DELETE</strong> para eliminar archivos del servidor.</p>
+                <ul>
+                    <li>Los archivos se eliminan del directorio <strong>/autoindex</strong></li>
+                    <li>Devuelve código <strong>204 No Content</strong> si tiene éxito</li>
+                    <li>Devuelve código <strong>404 Not Found</strong> si el archivo no existe</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Formulario -->
         <div class="card">
-            <div class="card-header">
-                <h5>Eliminar un archivo</h5>
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Formulario de Eliminación</h5>
             </div>
             <div class="card-body">
                 <form method="POST" action="/delete_file">
                     <div class="mb-3">
                         <label for="filename" class="form-label">Nombre del archivo a eliminar:</label>
-                        <input type="text" class="form-control" id="filename" name="filename"placeholder="miarchivo.txt"required>
+                        <input type="text" class="form-control" id="filename" name="filename" placeholder="miarchivo.txt" required>
                         <small class="text-muted">Escribe el nombre del archivo (ej: file.txt)</small>
                     </div>
                     <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-primary">Eliminar archivo</button>
-                    <a href="/" class="btn btn-secondary">Inicio</a>
+                    <button type="submit" class="btn btn-danger">Eliminar Archivo</button>
+                    <a href="/autoindex" class="btn btn-secondary">Ver Archivos</a>
                 </form>
             </div>
         </div>

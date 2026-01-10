@@ -1,15 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Webserv</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoindex - Webserv</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .file-list {
+            list-style: none;
+            padding: 0;
+        }
+        .file-list li {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            transition: background-color 0.2s;
+        }
+        .file-list li:hover {
+            background-color: #f8f9fa;
+        }
+        .file-list a {
+            text-decoration: none;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-list a:hover {
+            color: #667eea;
+        }
+        .folder {
+            color: #ffc107 !important;
+            font-weight: 500;
+        }
+        .file {
+            color: #495057;
+        }
+    </style>
 </head>
 <body>
-    <h1>Index of {{PATH}}</h1>
-    <ul>
-        {{FILE_LIST}}
-    </ul>
+    <!-- Barra de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a href="/" class="navbar-brand mb-0 h1">🌐 Web Service</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/autoindex">Autoindex</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/formupload.html">Subir Archivos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/delete_file.html">Eliminar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chunked.html">Chunked</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/cgi.html">CGI</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="mb-4">Explorador de Archivos</h1>
+        
+        <!-- Ruta actual -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Ruta Actual</h5>
+            </div>
+            <div class="card-body">
+                <span class="path-badge">{{PATH}}</span>
+            </div>
+        </div>
+
+        <!-- Lista de archivos -->
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Contenido del Directorio</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="file-list">
+                    {{FILE_LIST}}
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>
