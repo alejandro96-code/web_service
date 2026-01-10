@@ -5,10 +5,9 @@
 Response::Response(const Request& request, const std::string& documentRoot,
                    const std::map<int, std::string>& errorPages,
                    const std::vector<Location>& locations,
-                   size_t clientMaxBodySize,
-                   const std::string& index)
+                   size_t clientMaxBodySize)
     : _statusCode(200), _statusMessage("OK"), _documentRoot(documentRoot), 
-      _index(index), _errorPages(errorPages), _locations(locations), _clientMaxBodySize(clientMaxBodySize)
+      _errorPages(errorPages), _locations(locations), _clientMaxBodySize(clientMaxBodySize)
 {
     try {
         procesar(request);
@@ -30,45 +29,6 @@ void Response::procesar(const Request& request)
 {
     std::string method = request.getMethod();
     std::string path = request.getPath();
-    
-    // Validar que el root no esté vacío y que exista
-    if (_documentRoot.empty() || !FileUtils::esDirectorio(_documentRoot)) {
-        _statusCode = HttpStatus::NOT_FOUND;
-        _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
-            _statusCode, _statusMessage, _errorPages);
-        _body = errorResp.body;
-        _headers["Content-Type"] = errorResp.contentType;
-        return;
-    }
-    
-    // Validar que el index no esté vacío y que exista en el root
-    if (_index.empty()) {
-        _statusCode = HttpStatus::NOT_FOUND;
-        _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
-            _statusCode, _statusMessage, _errorPages);
-        _body = errorResp.body;
-        _headers["Content-Type"] = errorResp.contentType;
-        return;
-    }
-    
-    // Validar que el archivo index exista en el root
-    std::string indexPath = _documentRoot;
-    if (indexPath[indexPath.length() - 1] != '/')
-        indexPath += "/";
-    indexPath += _index;
-    
-    std::string contenidoIndex = FileUtils::leerArchivo(indexPath);
-    if (contenidoIndex.empty()) {
-        _statusCode = HttpStatus::NOT_FOUND;
-        _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
-            _statusCode, _statusMessage, _errorPages);
-        _body = errorResp.body;
-        _headers["Content-Type"] = errorResp.contentType;
-        return;
-    }
     
     // Validar que el método no esté vacío
     if (method.empty()) {

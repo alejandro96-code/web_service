@@ -18,7 +18,6 @@ protected:
     std::map<std::string, std::string> _headers;
     std::string _body;
     std::string _documentRoot;
-    std::string _index;
     std::map<int, std::string> _errorPages;
     std::vector<Location> _locations;
     size_t _clientMaxBodySize;
@@ -27,8 +26,7 @@ public:
     Response(const Request& request, const std::string& documentRoot, 
              const std::map<int, std::string>& errorPages,
              const std::vector<Location>& locations,
-             size_t clientMaxBodySize,
-             const std::string& index);
+             size_t clientMaxBodySize);
     virtual ~Response();
     
     void procesar(const Request& request);

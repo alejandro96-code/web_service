@@ -30,7 +30,7 @@ void Response::manejarGET(const Request& request)
         std::string indexPath = rutaCompleta;
         if (indexPath[indexPath.length() - 1] != '/')
             indexPath += "/";
-        indexPath += _index;
+        indexPath += "index.html";
         
         std::string contenido = FileUtils::leerArchivo(indexPath);
         if (!contenido.empty())

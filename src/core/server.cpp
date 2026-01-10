@@ -183,7 +183,7 @@ void Server::manejarCliente(int client_fd)
                     // Crear Request dummy para generar error 413 con template
                     std::string rawRequest = _client_buffers[client_fd];
                     Request request(rawRequest);
-                    Response response(request, _document_root, _error_pages, _locations, _client_max_body_size, _index_file);
+                    Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
                     std::string httpResponse = response.toString();
                     
                     // La validación en Response.cpp generará el 413 con template
@@ -214,7 +214,7 @@ void Server::manejarCliente(int client_fd)
         // Procesar petición completa
         std::string rawRequest = _client_buffers[client_fd];
         Request request(rawRequest);
-        Response response(request, _document_root, _error_pages, _locations, _client_max_body_size, _index_file);
+        Response response(request, _document_root, _error_pages, _locations, _client_max_body_size);
         std::string httpResponse = response.toString();
         
         _pending_responses[client_fd] = httpResponse;
