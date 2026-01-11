@@ -141,18 +141,61 @@ static bool parseServer(std::ifstream& file, ServerConfig& server) {
         else if (key == "client_max_body_size") {
             std::string value;
             iss >> value;
-            // Parsear tamaño: 10M, 1G, 500K
-            size_t size = 0;
-            char unit = value[value.length() - 1];
-            if (unit == 'M' || unit == 'm') {
-                size = atoi(value.c_str()) * 1024 * 1024;
-            } else if (unit == 'G' || unit == 'g') {
-                size = atoi(value.c_str()) * 1024 * 1024 * 1024;
-            } else if (unit == 'K' || unit == 'k') {
-                size = atoi(value.c_str()) * 1024;
-            } else {
-                size = atoi(value.c_str());
+            
+            // Validar que no esté vacío
+            if (value.empty()) {
+                std::cerr << "Error en la configuración del client_max_body_size: valor vacío" << std::endl;
+                return false;
             }
+            
+            // Extraer la unidad (último carácter)
+            char unit = value[value.length() - 1];
+            bool has_unit = (unit == 'M' || unit == 'm' || unit == 'G' || unit == 'g' || unit == 'K' || unit == 'k');
+            
+            // Extraer la parte numérica
+            std::string num_part = has_unit ? value.substr(0, value.length() - 1) : value;
+            
+            // Validar que la parte numérica sea válida (solo dígitos)
+            if (num_part.empty()) {
+                std::cerr << "Error en la configuración del client_max_body_size: '" << value << "' no es válido" << std::endl;
+                return false;
+            }
+            
+            for (size_t i = 0; i < num_part.length(); i++) {
+                if (!isdigit(num_part[i])) {
+                    std::cerr << "Error en la configuración del client_max_body_size: '" << value << "' no es válido" << std::endl;
+                    return false;
+                }
+            }
+            
+            // Convertir a número
+            int num = atoi(num_part.c_str());
+            
+            // Validar que no sea 0
+            if (num == 0) {
+                std::cerr << "Error en la configuración del client_max_body_size: no puede ser 0" << std::endl;
+                return false;
+            }
+            
+            // Calcular tamaño en bytes según la unidad
+            size_t size = 0;
+            if (unit == 'M' || unit == 'm') {
+                // Validar límite de 10M
+                if (num > 10) {
+                    std::cerr << "Error en la configuración del client_max_body_size: máximo permitido es 10M" << std::endl;
+                    return false;
+                }
+                size = num * 1024 * 1024;
+            } else if (unit == 'K' || unit == 'k') {
+                size = num * 1024;
+            } else if (unit == 'G' || unit == 'g') {
+                std::cerr << "Error en la configuración del client_max_body_size: máximo permitido es 10M" << std::endl;
+                return false;
+            } else {
+                // Sin unidad, son bytes directos
+                size = num;
+            }
+            
             server.client_max_body_size = size;
         }
     }
@@ -201,17 +244,67 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
             if (key == "client_max_body_size") {
                 std::string value;
                 iss >> value;
-                size_t size = 0;
-                char unit = value[value.length() - 1];
-                if (unit == 'M' || unit == 'm') {
-                    size = atoi(value.c_str()) * 1024 * 1024;
-                } else if (unit == 'G' || unit == 'g') {
-                    size = atoi(value.c_str()) * 1024 * 1024 * 1024;
-                } else if (unit == 'K' || unit == 'k') {
-                    size = atoi(value.c_str()) * 1024;
-                } else {
-                    size = atoi(value.c_str());
+                
+                // Validar que no esté vacío
+                if (value.empty()) {
+                    std::cerr << "Error en la configuración del client_max_body_size: valor vacío" << std::endl;
+                    servers.clear();
+                    return servers;
                 }
+                
+                // Extraer la unidad (último carácter)
+                char unit = value[value.length() - 1];
+                bool has_unit = (unit == 'M' || unit == 'm' || unit == 'G' || unit == 'g' || unit == 'K' || unit == 'k');
+                
+                // Extraer la parte numérica
+                std::string num_part = has_unit ? value.substr(0, value.length() - 1) : value;
+                
+                // Validar que la parte numérica sea válida (solo dígitos)
+                if (num_part.empty()) {
+                    std::cerr << "Error en la configuración del client_max_body_size: '" << value << "' no es válido" << std::endl;
+                    servers.clear();
+                    return servers;
+                }
+                
+                for (size_t i = 0; i < num_part.length(); i++) {
+                    if (!isdigit(num_part[i])) {
+                        std::cerr << "Error en la configuración del client_max_body_size: '" << value << "' no es válido" << std::endl;
+                        servers.clear();
+                        return servers;
+                    }
+                }
+                
+                // Convertir a número
+                int num = atoi(num_part.c_str());
+                
+                // Validar que no sea 0
+                if (num == 0) {
+                    std::cerr << "Error en la configuración del client_max_body_size: no puede ser 0" << std::endl;
+                    servers.clear();
+                    return servers;
+                }
+                
+                // Calcular tamaño en bytes según la unidad
+                size_t size = 0;
+                if (unit == 'M' || unit == 'm') {
+                    // Validar límite de 10M
+                    if (num > 10) {
+                        std::cerr << "Error en la configuración del client_max_body_size: máximo permitido es 10M" << std::endl;
+                        servers.clear();
+                        return servers;
+                    }
+                    size = num * 1024 * 1024;
+                } else if (unit == 'K' || unit == 'k') {
+                    size = num * 1024;
+                } else if (unit == 'G' || unit == 'g') {
+                    std::cerr << "Error en la configuración del client_max_body_size: máximo permitido es 10M" << std::endl;
+                    servers.clear();
+                    return servers;
+                } else {
+                    // Sin unidad, son bytes directos
+                    size = num;
+                }
+                
                 http_client_max_body_size = size;
             }
         }
