@@ -123,6 +123,17 @@ void Response::procesar(const Request& request)
         return;
     }
     
+    // Easter egg: ruta /teapot devuelve 418
+    if (path == "/teapot") {
+        _statusCode = 418;
+        _statusMessage = "I'm a teapot";
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            _statusCode, _statusMessage, _errorPages);
+        _body = errorResp.body;
+        _headers["Content-Type"] = errorResp.contentType;
+        return;
+    }
+    
     // Validar que el método está permitido para esta ruta
     if (!LocationMatcher::metodoPermitido(path, method, _locations)) {
         _statusCode = HttpStatus::METHOD_NOT_ALLOWED;
