@@ -6,11 +6,16 @@
     Los codigo 20X indican que la solicitud a sido correcta
         200 solicitud exitosa
         201 solicitud bien creada
+    Los codigos 30x son redirecciones:
+        301 el archivo se ha movido permanentemente
+        302 redireccion encontrada
     Los codigos 400 indican un error del cliente
         400 solicitud mal creada
         403 solicitud hecha sin tener permisos
         404 archivo, ruta... no encontrada
         405 solicitud de un metodo no permitido
+        413 archivo muy grande
+        418 soy una tetera 
     Los codigos 500 indican error en el servidor
         500 error interno (la solicitud esta bien pero algo falla en el servidor)
         501 no implementado (el servidor no reconoce el metodo solicitado)

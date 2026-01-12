@@ -61,33 +61,31 @@ std::vector<std::string> Autoindex::listarDirectorio(const std::string& ruta)
     return archivos;
 }
 
-// Generar HTML con listado de archivos
+/*
+    Generar HTML con listado de archivos Auto index
+    Obtener lista de archivos, Ordenar alfabéticamente y Construir lista de archivos
+    Creamos un for para listar los archivos y directorios
+    despues construimos URL correcta evitando barras duplicadas y Eliminamos barra final de rutaURL si existe 
+    Por último: Leer el template HTML ,Reemplazar placeholders ,Reemplazar {{PATH}} y Reemplazar {{FILE_LIST}}
+*/
 std::string Autoindex::generarHTML(const std::string& rutaDirectorio, const std::string& rutaURL)
 {
-    // Obtener lista de archivos
+    
     std::vector<std::string> archivos = listarDirectorio(rutaDirectorio);
-    
-    // Ordenar alfabéticamente
     std::sort(archivos.begin(), archivos.end());
-    
-    // Construir lista de archivos
     std::ostringstream listaArchivos;
-    
-    // Si no estamos en la raíz, agregar enlace al directorio padre
+
     if (rutaURL != "/") {
         listaArchivos << "        <li><a href=\"..\" class=\"folder\">📁 ../</a></li>\n";
     }
     
-    // Listar archivos y directorios
     for (size_t i = 0; i < archivos.size(); i++) {
         std::string nombre = archivos[i];
         bool esDir = (nombre[nombre.length() - 1] == '/');
         
         listaArchivos << "        <li><a href=\"";
         
-        // Construir URL correcta evitando barras duplicadas
         std::string urlLimpia = rutaURL;
-        // Eliminar barra final de rutaURL si existe
         if (urlLimpia.length() > 1 && urlLimpia[urlLimpia.length() - 1] == '/') {
             urlLimpia = urlLimpia.substr(0, urlLimpia.length() - 1);
         }
@@ -102,7 +100,6 @@ std::string Autoindex::generarHTML(const std::string& rutaDirectorio, const std:
         listaArchivos << (esDir ? "📁 " : "📄 ") << nombre << "</a></li>\n";
     }
     
-    // Leer el template HTML
     std::ifstream templateFile("templates/autoindex.html");
     std::string htmlTemplate;
     
@@ -114,17 +111,14 @@ std::string Autoindex::generarHTML(const std::string& rutaDirectorio, const std:
     buffer << templateFile.rdbuf();
     htmlTemplate = buffer.str();
     templateFile.close();
-    
-    // Reemplazar placeholders
+
     size_t pos;
-    
-    // Reemplazar {{PATH}}
+
     pos = htmlTemplate.find("{{PATH}}");
     if (pos != std::string::npos) {
         htmlTemplate.replace(pos, 8, rutaURL);
     }
-    
-    // Reemplazar {{FILE_LIST}}
+
     pos = htmlTemplate.find("{{FILE_LIST}}");
     if (pos != std::string::npos) {
         htmlTemplate.replace(pos, 13, listaArchivos.str());
