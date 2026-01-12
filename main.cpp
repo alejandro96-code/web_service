@@ -5,28 +5,33 @@
 
 /*
     Servidor multi-puerto:
-    1. Cargar configuración con múltiples servidores
-    2. Crear una instancia Server por cada servidor configurado
-    3. Inicializar cada servidor (socket, bind, listen)
-    4. Bucle principal con select() monitoreando TODOS los server_fd
-    5. Cuando hay actividad en un server_fd: accept() y crear cliente
-    6. Cuando hay actividad en un cliente: leer/escribir datos
+    1. Lee el archivo de configuracion, cada ServerConfig representa un servidor individual
+    2. Crear una instancia Server por cada servidor configurado y los inicializa
+    3. Bucle principal con select() monitoreando TODOS los server_fd
+        3.1 Prepara los file descriptors
+        3.2 Se realizan las llamadas al select
+        3.3 Se aceptan las conexiones
+        3.4 Se leen los datos del cliente
+        3.5 Se envia la respuesta al cliente
+    4. Se libera la memoria de todos los servidores creados dinamicamente
 */
+
 int main(int argc, char *argv[]) {
     
     if (argc != 2) {
-        std::cerr << "Uso: " << argv[0] << " [archivo de configuración]" << std::endl;
+        std::cerr << FORMA_DE_USO << std::endl;
         return 1;
     }
     
+    /* Paso 1 */
     std::vector<ServerConfig> configs = leerConfig(argv[1]);
     if (configs.empty()) {
         return 1;
     }
     
-    std::cout << "Número de servidores: " << configs.size() << std::endl << std::endl;
+    std::cout << NUMERO_DE_SERVIDORES << configs.size() << std::endl << std::endl;
     
-    // Crear e inicializar todos los servidores
+    /* Paso 2 */
     std::vector<Server*> servidores;
     for (size_t i = 0; i < configs.size(); i++) {
         Server* srv = new Server(configs[i]);
@@ -34,7 +39,7 @@ int main(int argc, char *argv[]) {
         servidores.push_back(srv);
     }
     
-    // Bucle principal con select() sobre TODOS los servidores
+    /* Paso 3 */
     while (true) {
         fd_set read_fds, write_fds;
         FD_ZERO(&read_fds);
@@ -42,7 +47,7 @@ int main(int argc, char *argv[]) {
         
         int max_fd = -1;
         
-        // Añadir todos los server_fd al set de lectura
+        /* Paso 3.1 */
         for (size_t i = 0; i < servidores.size(); i++) {
             int server_fd = servidores[i]->getServerFd();
             if (server_fd > 0) {
@@ -51,13 +56,11 @@ int main(int argc, char *argv[]) {
             }
         }
         
-        // Añadir todos los clientes activos de todos los servidores
         for (size_t i = 0; i < servidores.size(); i++) {
             std::set<int>& clients = servidores[i]->getActiveClients();
             std::map<int, std::string>& pending = servidores[i]->getPendingResponses();
             
             for (std::set<int>::iterator it = clients.begin(); it != clients.end(); ++it) {
-                // Solo agregar para lectura si NO tiene respuesta pendiente
                 if (pending.find(*it) == pending.end()) {
                     FD_SET(*it, &read_fds);
                     if (*it > max_fd) max_fd = *it;
@@ -65,7 +68,6 @@ int main(int argc, char *argv[]) {
             }
         }
         
-        // Añadir clientes con respuestas pendientes para escritura
         for (size_t i = 0; i < servidores.size(); i++) {
             std::map<int, std::string>& pending = servidores[i]->getPendingResponses();
             for (std::map<int, std::string>::iterator it = pending.begin(); 
@@ -76,7 +78,7 @@ int main(int argc, char *argv[]) {
         }
         
         if (max_fd == -1) {
-            std::cerr << "No hay file descriptors válidos" << std::endl;
+            std::cerr << NOT_FILE_DESCRIPTOR << std::endl;
             break;
         }
         
@@ -84,24 +86,25 @@ int main(int argc, char *argv[]) {
         timeout.tv_sec = 1;
         timeout.tv_usec = 0;
         
+        /* Paso 3.2 */
         int activity = select(max_fd + 1, &read_fds, &write_fds, NULL, &timeout);
         
         if (activity < 0) {
-            std::cerr << "Error en select" << std::endl;
+            std::cerr << ERROR_SELECT << std::endl;
             continue;
         }
         if (activity == 0) {
-            continue; // Timeout
+            continue;
         }
         
-        // Verificar nuevas conexiones en cada servidor
+        /* Paso 3.3 */
         for (size_t i = 0; i < servidores.size(); i++) {
             int server_fd = servidores[i]->getServerFd();
             if (server_fd > 0 && FD_ISSET(server_fd, &read_fds)) {
                 int client_fd = accept(server_fd, NULL, NULL);
                 if (client_fd >= 0) {
                     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1) {
-                        std::cerr << "Error configurando non-blocking en cliente" << std::endl;
+                        std::cerr << ERROR_NON_BLOCKING << std::endl;
                         close(client_fd);
                     } else {
                         servidores[i]->getActiveClients().insert(client_fd);
@@ -110,7 +113,7 @@ int main(int argc, char *argv[]) {
             }
         }
         
-        // Leer datos de clientes activos
+        /* Paso 3.4 */
         for (size_t i = 0; i < servidores.size(); i++) {
             std::set<int> clients_copy = servidores[i]->getActiveClients();
             for (std::set<int>::iterator it = clients_copy.begin(); 
@@ -121,7 +124,7 @@ int main(int argc, char *argv[]) {
             }
         }
         
-        // Escribir respuestas pendientes
+        /* Paso 3.5 */
         for (size_t i = 0; i < servidores.size(); i++) {
             std::map<int, std::string>& pending = servidores[i]->getPendingResponses();
             std::vector<int> clients_to_write;
@@ -140,9 +143,9 @@ int main(int argc, char *argv[]) {
                 ssize_t bytes_sent = send(client_fd, response.c_str(), response.length(), 0);
                 
                 if (bytes_sent == -1) {
-                    std::cerr << "Error al enviar respuesta" << std::endl;
+                    std::cerr << ERROR_RESPONSE << std::endl;
                 } else if (bytes_sent == 0) {
-                    std::cerr << "No se pudo enviar datos" << std::endl;
+                    std::cerr << ERROR_NOT_DATOS << std::endl;
                 }
                 
                 close(client_fd);
@@ -152,7 +155,7 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    // Limpieza
+    /* Paso 4 */
     for (size_t i = 0; i < servidores.size(); i++) {
         delete servidores[i];
     }

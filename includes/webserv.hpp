@@ -26,6 +26,13 @@
 #define BUFFER_SIZE 4096
 
 // MENSAJES DE ERROR
-#define ERROR_NO_CARGAR "Error: NO se puede cargar"
+#define ERROR_NO_CARGAR "Error: No se puede cargar el sevidor"
+#define FORMA_DE_USO "Uso: ./webservice [archivo de configuracion]"
+#define NUMERO_DE_SERVIDORES "Número de servidores: "
+#define NOT_FILE_DESCRIPTOR "No hay file descriptors válidos"
+#define ERROR_SELECT "Error en select"
+#define ERROR_NON_BLOCKING "Error configurando non-blocking en cliente"
+#define ERROR_RESPONSE "Error al enviar respuesta"
+#define ERROR_NOT_DATOS "No se pudo enviar datos"
 
 #endif
