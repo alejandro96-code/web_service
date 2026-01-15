@@ -11,12 +11,12 @@ Response::Response(const Request& request, const std::string& documentRoot,
       _index(index), _errorPages(errorPages), _locations(locations), _clientMaxBodySize(clientMaxBodySize)
 {
     try {
-        procesar(request);
+        process(request);
     }
     catch (const std::exception& e) {
         _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
         _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -26,16 +26,16 @@ Response::Response(const Request& request, const std::string& documentRoot,
 Response::~Response() {}
 
 // Procesar la petición y generar respuesta
-void Response::procesar(const Request& request)
+void Response::process(const Request& request)
 {
     std::string method = request.getMethod();
     std::string path = request.getPath();
     
     // Validar que el root no esté vacío y que exista
-    if (_documentRoot.empty() || !FileUtils::esDirectorio(_documentRoot)) {
+    if (_documentRoot.empty() || !FileUtils::isDirectory(_documentRoot)) {
         _statusCode = HttpStatus::NOT_FOUND;
         _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -46,7 +46,7 @@ void Response::procesar(const Request& request)
     if (_index.empty()) {
         _statusCode = HttpStatus::NOT_FOUND;
         _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -59,11 +59,11 @@ void Response::procesar(const Request& request)
         indexPath += "/";
     indexPath += _index;
     
-    std::string contenidoIndex = FileUtils::leerArchivo(indexPath);
-    if (contenidoIndex.empty()) {
+    std::string indexContent = FileUtils::readFile(indexPath);
+    if (indexContent.empty()) {
         _statusCode = HttpStatus::NOT_FOUND;
         _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -74,7 +74,7 @@ void Response::procesar(const Request& request)
     if (method.empty()) {
         _statusCode = HttpStatus::BAD_REQUEST;
         _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -90,7 +90,7 @@ void Response::procesar(const Request& request)
             if (contentLength > _clientMaxBodySize) {
                 _statusCode = HttpStatus::PAYLOAD_TOO_LARGE;
                 _statusMessage = HttpStatus::getMessage(HttpStatus::PAYLOAD_TOO_LARGE);
-                ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                     _statusCode, _statusMessage, _errorPages);
                 _body = errorResp.body;
                 _headers["Content-Type"] = errorResp.contentType;
@@ -104,7 +104,7 @@ void Response::procesar(const Request& request)
         if (actualBodySize > _clientMaxBodySize) {
             _statusCode = HttpStatus::PAYLOAD_TOO_LARGE;
             _statusMessage = HttpStatus::getMessage(HttpStatus::PAYLOAD_TOO_LARGE);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                 _statusCode, _statusMessage, _errorPages);
             _body = errorResp.body;
             _headers["Content-Type"] = errorResp.contentType;
@@ -114,7 +114,7 @@ void Response::procesar(const Request& request)
     }
     
     // Verificar si hay redirección configurada para esta ruta
-    Location* loc = LocationMatcher::obtenerLocation(path, _locations);
+    Location* loc = LocationMatcher::getLocation(path, _locations);
     if (loc != NULL && loc->has_redirect) {
         _statusCode = loc->redirect_code;
         _statusMessage = HttpStatus::getMessage(loc->redirect_code);
@@ -127,7 +127,7 @@ void Response::procesar(const Request& request)
     if (path == "/teapot") {
         _statusCode = 418;
         _statusMessage = "I'm a teapot";
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -135,10 +135,10 @@ void Response::procesar(const Request& request)
     }
     
     // Validar que el método está permitido para esta ruta
-    if (!LocationMatcher::metodoPermitido(path, method, _locations)) {
+    if (!LocationMatcher::isMethodAllowed(path, method, _locations)) {
         _statusCode = HttpStatus::METHOD_NOT_ALLOWED;
         _statusMessage = HttpStatus::getMessage(HttpStatus::METHOD_NOT_ALLOWED);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -146,19 +146,19 @@ void Response::procesar(const Request& request)
     }
     
     if (method == "GET") {
-        manejarGET(request);
+        handleGET(request);
     }
     else if (method == "POST") {
-        manejarPOST(request);
+        handlePOST(request);
     }
     else if (method == "DELETE") {
-        manejarDELETE(request);
+        handleDELETE(request);
     }
     else if (method == "PUT" || method == "PATCH" || method == "HEAD" || 
              method == "OPTIONS" || method == "TRACE" || method == "CONNECT") {
         _statusCode = HttpStatus::NOT_IMPLEMENTED;
         _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_IMPLEMENTED);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -166,7 +166,7 @@ void Response::procesar(const Request& request)
     else {
         _statusCode = HttpStatus::BAD_REQUEST;
         _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;

@@ -20,38 +20,38 @@
         ni index.html ni autoindex)
         Despues determinamos el content type que hemos usado para la variable contenido
 */
-void Response::manejarGET(const Request& request)
+void Response::handleGET(const Request& request)
 {
-    std::string path = FileUtils::normalizarPath(request.getPath());
-    std::string rutaCompleta = _documentRoot + path;
+    std::string path = FileUtils::normalizePath(request.getPath());
+    std::string fullPath = _documentRoot + path;
     
-    if (FileUtils::esDirectorio(rutaCompleta))
+    if (FileUtils::isDirectory(fullPath))
     {
-        std::string indexPath = rutaCompleta;
+        std::string indexPath = fullPath;
         if (indexPath[indexPath.length() - 1] != '/')
             indexPath += "/";
         indexPath += _index;
         
-        std::string contenido = FileUtils::leerArchivo(indexPath);
-        if (!contenido.empty())
+        std::string content = FileUtils::readFile(indexPath);
+        if (!content.empty())
         {
             _statusCode = HttpStatus::OK;
             _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
             _headers["Content-Type"] = "text/html";
-            _body = contenido;
+            _body = content;
             return;
         }
-        if (LocationMatcher::tieneAutoindex(path, _locations))
+        if (LocationMatcher::hasAutoindex(path, _locations))
         {
             _statusCode = HttpStatus::OK;
             _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
             _headers["Content-Type"] = "text/html";
-            _body = Autoindex::generarHTML(rutaCompleta, path);
+            _body = Autoindex::generateHTML(fullPath, path);
             return;
         }
         _statusCode = HttpStatus::FORBIDDEN;
         _statusMessage = HttpStatus::getMessage(HttpStatus::FORBIDDEN);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
@@ -59,14 +59,14 @@ void Response::manejarGET(const Request& request)
     }
     
     // Detectar si es un archivo CGI (.php, .py)
-    if (CGIHandler::esCGI(rutaCompleta))
+    if (CGIHandler::isCGI(fullPath))
     {
-        std::string salidaCGI = CGIHandler::ejecutarCGI(rutaCompleta, request);
+        std::string cgiOutput = CGIHandler::executeCGI(fullPath, request);
         
-        if (salidaCGI.empty()) {
+        if (cgiOutput.empty()) {
             _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
             _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                 _statusCode, _statusMessage, _errorPages);
             _body = errorResp.body;
             _headers["Content-Type"] = errorResp.contentType;
@@ -75,12 +75,12 @@ void Response::manejarGET(const Request& request)
         
         // La salida CGI puede incluir headers HTTP
         // Formato: "Content-Type: text/html\r\n\r\n<html>..."
-        size_t headerEnd = salidaCGI.find("\r\n\r\n");
+        size_t headerEnd = cgiOutput.find("\r\n\r\n");
         
         if (headerEnd != std::string::npos) {
             // Parsear headers de la salida CGI
-            std::string headers = salidaCGI.substr(0, headerEnd);
-            std::string body = salidaCGI.substr(headerEnd + 4);
+            std::string headers = cgiOutput.substr(0, headerEnd);
+            std::string body = cgiOutput.substr(headerEnd + 4);
             
             // Extraer Content-Type si existe
             size_t ctPos = headers.find("Content-Type:");
@@ -103,31 +103,31 @@ void Response::manejarGET(const Request& request)
             _statusCode = HttpStatus::OK;
             _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
             _headers["Content-Type"] = "text/html";
-            _body = salidaCGI;
+            _body = cgiOutput;
         }
         return;
     }
     
     // Archivo estático normal
-    std::string contenido = FileUtils::leerArchivo(rutaCompleta);
+    std::string content = FileUtils::readFile(fullPath);
     
-    if (contenido.empty()) {
+    if (content.empty()) {
         _statusCode = HttpStatus::NOT_FOUND;
         _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;
         return;
     }
     
-    size_t puntoPos = path.find_last_of('.');
+    size_t dotPos = path.find_last_of('.');
     std::string extension = "";
-    if (puntoPos != std::string::npos) {
-        extension = path.substr(puntoPos);
+    if (dotPos != std::string::npos) {
+        extension = path.substr(dotPos);
     }
     _statusCode = HttpStatus::OK;
     _statusMessage = HttpStatus::getMessage(HttpStatus::OK);
-    _headers["Content-Type"] = FileUtils::obtenerContentType(extension);
-    _body = contenido;
+    _headers["Content-Type"] = FileUtils::getContentType(extension);
+    _body = content;
 }

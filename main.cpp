@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     }
     
     /* Paso 1 */
-    std::vector<ServerConfig> configs = leerConfig(argv[1]);
+    std::vector<ServerConfig> configs = readConfig(argv[1]);
     if (configs.empty()) {
         return 1;
     }
@@ -32,11 +32,11 @@ int main(int argc, char *argv[]) {
     std::cout << NUMERO_DE_SERVIDORES << configs.size() << std::endl << std::endl;
     
     /* Paso 2 */
-    std::vector<Server*> servidores;
+    std::vector<Server*> servers;
     for (size_t i = 0; i < configs.size(); i++) {
         Server* srv = new Server(configs[i]);
-        srv->iniciar();
-        servidores.push_back(srv);
+        srv->start();
+        servers.push_back(srv);
     }
     
     /* Paso 3 */
@@ -48,17 +48,17 @@ int main(int argc, char *argv[]) {
         int max_fd = -1;
         
         /* Paso 3.1 */
-        for (size_t i = 0; i < servidores.size(); i++) {
-            int server_fd = servidores[i]->getServerFd();
+        for (size_t i = 0; i < servers.size(); i++) {
+            int server_fd = servers[i]->getServerFd();
             if (server_fd > 0) {
                 FD_SET(server_fd, &read_fds);
                 if (server_fd > max_fd) max_fd = server_fd;
             }
         }
         
-        for (size_t i = 0; i < servidores.size(); i++) {
-            std::set<int>& clients = servidores[i]->getActiveClients();
-            std::map<int, std::string>& pending = servidores[i]->getPendingResponses();
+        for (size_t i = 0; i < servers.size(); i++) {
+            std::set<int>& clients = servers[i]->getActiveClients();
+            std::map<int, std::string>& pending = servers[i]->getPendingResponses();
             
             for (std::set<int>::iterator it = clients.begin(); it != clients.end(); ++it) {
                 if (pending.find(*it) == pending.end()) {
@@ -68,8 +68,8 @@ int main(int argc, char *argv[]) {
             }
         }
         
-        for (size_t i = 0; i < servidores.size(); i++) {
-            std::map<int, std::string>& pending = servidores[i]->getPendingResponses();
+        for (size_t i = 0; i < servers.size(); i++) {
+            std::map<int, std::string>& pending = servers[i]->getPendingResponses();
             for (std::map<int, std::string>::iterator it = pending.begin(); 
                  it != pending.end(); ++it) {
                 FD_SET(it->first, &write_fds);
@@ -98,8 +98,8 @@ int main(int argc, char *argv[]) {
         }
         
         /* Paso 3.3 */
-        for (size_t i = 0; i < servidores.size(); i++) {
-            int server_fd = servidores[i]->getServerFd();
+        for (size_t i = 0; i < servers.size(); i++) {
+            int server_fd = servers[i]->getServerFd();
             if (server_fd > 0 && FD_ISSET(server_fd, &read_fds)) {
                 int client_fd = accept(server_fd, NULL, NULL);
                 if (client_fd >= 0) {
@@ -107,26 +107,26 @@ int main(int argc, char *argv[]) {
                         std::cerr << ERROR_NON_BLOCKING << std::endl;
                         close(client_fd);
                     } else {
-                        servidores[i]->getActiveClients().insert(client_fd);
+                        servers[i]->getActiveClients().insert(client_fd);
                     }
                 }
             }
         }
         
         /* Paso 3.4 */
-        for (size_t i = 0; i < servidores.size(); i++) {
-            std::set<int> clients_copy = servidores[i]->getActiveClients();
+        for (size_t i = 0; i < servers.size(); i++) {
+            std::set<int> clients_copy = servers[i]->getActiveClients();
             for (std::set<int>::iterator it = clients_copy.begin(); 
                  it != clients_copy.end(); ++it) {
                 if (FD_ISSET(*it, &read_fds)) {
-                    servidores[i]->manejarClientePublic(*it);
+                    servers[i]->handleClientPublic(*it);
                 }
             }
         }
         
         /* Paso 3.5 */
-        for (size_t i = 0; i < servidores.size(); i++) {
-            std::map<int, std::string>& pending = servidores[i]->getPendingResponses();
+        for (size_t i = 0; i < servers.size(); i++) {
+            std::map<int, std::string>& pending = servers[i]->getPendingResponses();
             std::vector<int> clients_to_write;
             
             for (std::map<int, std::string>::iterator it = pending.begin(); 
@@ -150,14 +150,14 @@ int main(int argc, char *argv[]) {
                 
                 close(client_fd);
                 pending.erase(client_fd);
-                servidores[i]->getActiveClients().erase(client_fd);
+                servers[i]->getActiveClients().erase(client_fd);
             }
         }
     }
     
     /* Paso 4 */
-    for (size_t i = 0; i < servidores.size(); i++) {
-        delete servidores[i];
+    for (size_t i = 0; i < servers.size(); i++) {
+        delete servers[i];
     }
     
     return 0;

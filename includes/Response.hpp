@@ -31,14 +31,14 @@ public:
              const std::string& index);
     virtual ~Response();
     
-    void procesar(const Request& request);
+    void process(const Request& request);
     std::string toString() const;
 
 protected:
     // Métodos virtuales para cada tipo de petición
-    virtual void manejarGET(const Request& request);
-    virtual void manejarPOST(const Request& request);
-    virtual void manejarDELETE(const Request& request);
+    virtual void handleGET(const Request& request);
+    virtual void handlePOST(const Request& request);
+    virtual void handleDELETE(const Request& request);
 };
 
 #endif

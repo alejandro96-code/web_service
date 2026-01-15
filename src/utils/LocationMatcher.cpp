@@ -11,19 +11,19 @@
     - path: "/api/users/123"
     - retorna: location de "/api/users" (más específica)
 */
-Location* LocationMatcher::obtenerLocation(const std::string& path, std::vector<Location>& locations)
+Location* LocationMatcher::getLocation(const std::string& path, std::vector<Location>& locations)
 {
-    Location* mejor = NULL;
-    size_t mayorLongitud = 0;
+    Location* best = NULL;
+    size_t maxLength = 0;
     
     for (size_t i = 0; i < locations.size(); i++) {
         std::string locPath = locations[i].path;
-        if (path.find(locPath) == 0 && locPath.length() > mayorLongitud) {
-            mayorLongitud = locPath.length();
-            mejor = &locations[i];
+        if (path.find(locPath) == 0 && locPath.length() > maxLength) {
+            maxLength = locPath.length();
+            best = &locations[i];
         }
     }
-    return mejor;
+    return best;
 }
 
 /*
@@ -37,10 +37,10 @@ Location* LocationMatcher::obtenerLocation(const std::string& path, std::vector<
     - metodoPermitido("/upload", "GET") → true
     - metodoPermitido("/upload", "DELETE") → false
 */
-bool LocationMatcher::metodoPermitido(const std::string& path, const std::string& method, 
+bool LocationMatcher::isMethodAllowed(const std::string& path, const std::string& method, 
                                       std::vector<Location>& locations)
 {
-    Location* loc = obtenerLocation(path, locations);
+    Location* loc = getLocation(path, locations);
     if (loc == NULL || loc->allow_methods.empty()) {
         return true;
     }
@@ -61,8 +61,8 @@ bool LocationMatcher::metodoPermitido(const std::string& path, const std::string
     Autoindex permite mostrar el listado de archivos en un directorio
     cuando no existe index.html.
 */
-bool LocationMatcher::tieneAutoindex(const std::string& path, std::vector<Location>& locations)
+bool LocationMatcher::hasAutoindex(const std::string& path, std::vector<Location>& locations)
 {
-    Location* loc = obtenerLocation(path, locations);
+    Location* loc = getLocation(path, locations);
     return (loc != NULL) ? loc->autoindex : false;
 }

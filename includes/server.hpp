@@ -7,7 +7,7 @@
 // Clase para manejar el servidor web
 class Server {
 private:
-    int _puerto;
+    int _port;
     int _backlog;
     std::string _document_root;
     std::string _index_file;
@@ -31,27 +31,27 @@ public:
     ~Server(); // Destructor
     
     // Métodos públicos
-    void iniciar();
+    void start();
     
     // Getters para acceder a datos privados
     int getServerFd() const { return _server_fd; }
     std::set<int>& getActiveClients() { return _active_clients; }
     std::map<int, std::string>& getPendingResponses() { return _pending_responses; }
-    void manejarClientePublic(int client_fd) { manejarCliente(client_fd); }
+    void handleClientPublic(int client_fd) { handleClient(client_fd); }
     
 private:
     // Métodos privados
-    bool crearSocket();
-    bool configurarSocket();
-    bool vincularPuerto();
-    bool escucharConexiones();
-    void manejarCliente(int client_fd);
+    bool createSocket();
+    bool configureSocket();
+    bool bindPort();
+    bool listenConnections();
+    void handleClient(int client_fd);
     
     // Métodos auxiliares
-    size_t extraerContentLength(const std::string& headers);
-    bool peticionCompleta(int client_fd);
+    size_t extractContentLength(const std::string& headers);
+    bool isRequestComplete(int client_fd);
     bool isTransferEncodingChunked(const std::string& headers);
-    bool chunkedDataCompleta(const std::string& data);
+    bool isChunkedDataComplete(const std::string& data);
     std::string decodeChunkedForValidation(const std::string& chunkedData);
 };
 

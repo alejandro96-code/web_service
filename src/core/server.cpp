@@ -29,7 +29,7 @@
 */
 Server::Server(const ServerConfig& config): _server_fd(-1)
 {
-    _puerto = config.port;
+    _port = config.port;
     _backlog = 3;
     _document_root = config.root;
     _index_file = config.index;
@@ -40,7 +40,7 @@ Server::Server(const ServerConfig& config): _server_fd(-1)
 }
 Server::~Server(){if (_server_fd != -1) {close(_server_fd);}}
 
-bool Server::crearSocket()
+bool Server::createSocket()
 {
     _server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (_server_fd == -1) {
@@ -56,7 +56,7 @@ bool Server::crearSocket()
     return true;
 }
 
-bool Server::configurarSocket()
+bool Server::configureSocket()
 {
     int opt = 1;
     if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
@@ -66,22 +66,22 @@ bool Server::configurarSocket()
     return true;
 }
 
-bool Server::vincularPuerto()
+bool Server::bindPort()
 {
     struct sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(_puerto);
+    address.sin_port = htons(_port);
     
     if (bind(_server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
     {
-        std::cerr << "No se puede vincular localhost al puerto " << _puerto << std::endl;
+        std::cerr << "No se puede vincular localhost al puerto " << _port << std::endl;
         return false;
     }
     return true;
 }
 
-bool Server::escucharConexiones() {
+bool Server::listenConnections() {
     if (listen(_server_fd, _backlog) < 0)
     {
         std::cerr << "Error en listen" << std::endl;
@@ -90,25 +90,25 @@ bool Server::escucharConexiones() {
     return true;
 }
 
-void Server::iniciar()
+void Server::start()
 {
-    if (!crearSocket()) {
-        std::cerr << "Error al crear socket para puerto " << _puerto << std::endl;
+    if (!createSocket()) {
+        std::cerr << "Error al crear socket para puerto " << _port << std::endl;
         return;
     }
-    if (!configurarSocket()) {
-        std::cerr << "Error al configurar socket para puerto " << _puerto << std::endl;
+    if (!configureSocket()) {
+        std::cerr << "Error al configurar socket para puerto " << _port << std::endl;
         return;
     }
-    if (!vincularPuerto()) {
-        std::cerr << "Error al vincular puerto " << _puerto << std::endl;
+    if (!bindPort()) {
+        std::cerr << "Error al vincular puerto " << _port << std::endl;
         return;
     }
-    if (!escucharConexiones()) {
-        std::cerr << "Error al escuchar en puerto " << _puerto << std::endl;
+    if (!listenConnections()) {
+        std::cerr << "Error al escuchar en puerto " << _port << std::endl;
         return;
     }
-    std::cout << "✓ Servidor escuchando en puerto " << _puerto << std::endl;
+    std::cout << "✓ Servidor escuchando en puerto " << _port << std::endl;
 }
 
 /*
@@ -119,7 +119,7 @@ void Server::iniciar()
     4. Si Content-Length > límite, rechaza con 413
     5. Si petición completa, procesa y responde
 */
-void Server::manejarCliente(int client_fd)
+void Server::handleClient(int client_fd)
 {
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, sizeof(buffer));
@@ -168,7 +168,7 @@ void Server::manejarCliente(int client_fd)
             
             // Extraer Content-Length (solo si NO es chunked)
             if (!_is_chunked[client_fd]) {
-                size_t content_length = extraerContentLength(headers);
+                size_t content_length = extractContentLength(headers);
                 _expected_content_length[client_fd] = content_length;
                 
                 // VALIDAR LÍMITE INMEDIATAMENTE
@@ -191,7 +191,7 @@ void Server::manejarCliente(int client_fd)
     }
     
     // Si headers completos, verificar si tenemos toda la petición
-    if (_headers_complete[client_fd] && peticionCompleta(client_fd)) {
+    if (_headers_complete[client_fd] && isRequestComplete(client_fd)) {
         // Si es chunked, validar el tamaño decodificado antes de procesar
         if (_is_chunked[client_fd]) {
             size_t header_end = _client_buffers[client_fd].find("\r\n\r\n");
@@ -240,7 +240,7 @@ void Server::manejarCliente(int client_fd)
 }
 
 // Extraer Content-Length de los headers
-size_t Server::extraerContentLength(const std::string& headers)
+size_t Server::extractContentLength(const std::string& headers)
 {
     size_t pos = headers.find("Content-Length:");
     if (pos == std::string::npos)
@@ -259,7 +259,7 @@ size_t Server::extraerContentLength(const std::string& headers)
 }
 
 // Verificar si tenemos la petición completa
-bool Server::peticionCompleta(int client_fd)
+bool Server::isRequestComplete(int client_fd)
 {
     size_t header_end = _client_buffers[client_fd].find("\r\n\r\n");
     if (header_end == std::string::npos)
@@ -269,7 +269,7 @@ bool Server::peticionCompleta(int client_fd)
     if (_is_chunked[client_fd]) {
         size_t header_size = header_end + 4;
         std::string body = _client_buffers[client_fd].substr(header_size);
-        return chunkedDataCompleta(body);
+        return isChunkedDataComplete(body);
     }
     
     // Si no es chunked, verificar Content-Length normal
@@ -297,7 +297,7 @@ bool Server::isTransferEncodingChunked(const std::string& headers)
 }
 
 // Verificar si tenemos todos los chunks (último chunk es "0\r\n\r\n")
-bool Server::chunkedDataCompleta(const std::string& data)
+bool Server::isChunkedDataComplete(const std::string& data)
 {
     // Buscar el patrón de finalización: "0\r\n\r\n"
     // El último chunk tiene tamaño 0

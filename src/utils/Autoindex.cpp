@@ -14,10 +14,10 @@
     que nos devolvera true.
     Asi distinguimos entre archivo y directorios.
 */
-bool Autoindex::esDirectorio(const std::string& ruta)
+bool Autoindex::isDirectory(const std::string& path)
 {
     struct stat info;
-    if (stat(ruta.c_str(), &info) != 0) {
+    if (stat(path.c_str(), &info) != 0) {
         return false;
     }
     return S_ISDIR(info.st_mode);
@@ -34,31 +34,31 @@ bool Autoindex::esDirectorio(const std::string& ruta)
     y si es un directorio añadimos una "/" y si no lo mostramos tal cual
     cerramos el directorio y lo retornamos
 */
-std::vector<std::string> Autoindex::listarDirectorio(const std::string& ruta)
+std::vector<std::string> Autoindex::listDirectory(const std::string& path)
 {
-    std::vector<std::string> archivos;
-    DIR* dir = opendir(ruta.c_str());
+    std::vector<std::string> files;
+    DIR* dir = opendir(path.c_str());
     
-    struct dirent* entrada;
+    struct dirent* entry;
     if (dir == NULL)
-        return archivos;
+        return files;
     
-    while ((entrada = readdir(dir)) != NULL)
+    while ((entry = readdir(dir)) != NULL)
     {
-        std::string nombre = entrada->d_name;
-        if (nombre == "." || nombre == "..") {
+        std::string name = entry->d_name;
+        if (name == "." || name == "..") {
             continue;
         }
         
-        std::string rutaCompleta = ruta + "/" + nombre;
-        if (esDirectorio(rutaCompleta)) {
-            archivos.push_back(nombre + "/");
+        std::string fullPath = path + "/" + name;
+        if (isDirectory(fullPath)) {
+            files.push_back(name + "/");
         } else {
-            archivos.push_back(nombre);
+            files.push_back(name);
         }
     }
     closedir(dir);
-    return archivos;
+    return files;
 }
 
 /*
@@ -68,36 +68,36 @@ std::vector<std::string> Autoindex::listarDirectorio(const std::string& ruta)
     despues construimos URL correcta evitando barras duplicadas y Eliminamos barra final de rutaURL si existe 
     Por último: Leer el template HTML ,Reemplazar placeholders ,Reemplazar {{PATH}} y Reemplazar {{FILE_LIST}}
 */
-std::string Autoindex::generarHTML(const std::string& rutaDirectorio, const std::string& rutaURL)
+std::string Autoindex::generateHTML(const std::string& directoryPath, const std::string& urlPath)
 {
     
-    std::vector<std::string> archivos = listarDirectorio(rutaDirectorio);
-    std::sort(archivos.begin(), archivos.end());
-    std::ostringstream listaArchivos;
+    std::vector<std::string> files = listDirectory(directoryPath);
+    std::sort(files.begin(), files.end());
+    std::ostringstream fileList;
 
-    if (rutaURL != "/") {
-        listaArchivos << "        <li><a href=\"..\" class=\"folder\">📁 ../</a></li>\n";
+    if (urlPath != "/") {
+        fileList << "        <li><a href=\"..\" class=\"folder\">📁 ../</a></li>\n";
     }
     
-    for (size_t i = 0; i < archivos.size(); i++) {
-        std::string nombre = archivos[i];
-        bool esDir = (nombre[nombre.length() - 1] == '/');
+    for (size_t i = 0; i < files.size(); i++) {
+        std::string name = files[i];
+        bool isDir = (name[name.length() - 1] == '/');
         
-        listaArchivos << "        <li><a href=\"";
+        fileList << "        <li><a href=\"";
         
-        std::string urlLimpia = rutaURL;
-        if (urlLimpia.length() > 1 && urlLimpia[urlLimpia.length() - 1] == '/') {
-            urlLimpia = urlLimpia.substr(0, urlLimpia.length() - 1);
+        std::string cleanUrl = urlPath;
+        if (cleanUrl.length() > 1 && cleanUrl[cleanUrl.length() - 1] == '/') {
+            cleanUrl = cleanUrl.substr(0, cleanUrl.length() - 1);
         }
         
-        if (urlLimpia == "/") {
-            listaArchivos << "/" << nombre;
+        if (cleanUrl == "/") {
+            fileList << "/" << name;
         } else {
-            listaArchivos << urlLimpia << "/" << nombre;
+            fileList << cleanUrl << "/" << name;
         }
         
-        listaArchivos << "\" class=\"" << (esDir ? "folder" : "file") << "\">";
-        listaArchivos << (esDir ? "📁 " : "📄 ") << nombre << "</a></li>\n";
+        fileList << "\" class=\"" << (isDir ? "folder" : "file") << "\">";
+        fileList << (isDir ? "📁 " : "📄 ") << name << "</a></li>\n";
     }
     
     std::ifstream templateFile("templates/autoindex.html");
@@ -116,12 +116,12 @@ std::string Autoindex::generarHTML(const std::string& rutaDirectorio, const std:
 
     pos = htmlTemplate.find("{{PATH}}");
     if (pos != std::string::npos) {
-        htmlTemplate.replace(pos, 8, rutaURL);
+        htmlTemplate.replace(pos, 8, urlPath);
     }
 
     pos = htmlTemplate.find("{{FILE_LIST}}");
     if (pos != std::string::npos) {
-        htmlTemplate.replace(pos, 13, listaArchivos.str());
+        htmlTemplate.replace(pos, 13, fileList.str());
     }
     
     return htmlTemplate;

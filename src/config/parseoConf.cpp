@@ -11,22 +11,22 @@ static std::string trim(const std::string& str) {
 
 // Parsear bloque location
 static bool parseLocation(std::ifstream& file, Location& location) {
-    std::string linea;
+    std::string line;
     
-    while (std::getline(file, linea)) {
-        linea = trim(linea);
+    while (std::getline(file, line)) {
+        line = trim(line);
         
-        if (linea.empty() || linea[0] == '#')
+        if (line.empty() || line[0] == '#')
             continue;
         
-        if (linea == "}")
+        if (line == "}")
             return true;
         
         // Quitar punto y coma
-        if (!linea.empty() && linea[linea.length() - 1] == ';')
-            linea = linea.substr(0, linea.length() - 1);
+        if (!line.empty() && line[line.length() - 1] == ';')
+            line = line.substr(0, line.length() - 1);
         
-        std::istringstream iss(linea);
+        std::istringstream iss(line);
         std::string key;
         iss >> key;
         
@@ -61,25 +61,25 @@ static bool parseLocation(std::ifstream& file, Location& location) {
 
 // Parsear bloque server
 static bool parseServer(std::ifstream& file, ServerConfig& server) {
-    std::string linea;
+    std::string line;
     
-    while (std::getline(file, linea)) {
-        linea = trim(linea);
+    while (std::getline(file, line)) {
+        line = trim(line);
         
-        if (linea.empty() || linea[0] == '#')
+        if (line.empty() || line[0] == '#')
             continue;
         
-        if (linea == "}")
+        if (line == "}")
             return true;
         
         // Detectar location
-        if (linea.find("location") == 0) {
+        if (line.find("location") == 0) {
             Location loc;
             // Extraer path: "location /" -> "/"
-            size_t start = linea.find_first_of(" \t");
-            size_t end = linea.find_first_of("{");
+            size_t start = line.find_first_of(" \t");
+            size_t end = line.find_first_of("{");
             if (start != std::string::npos) {
-                std::string path_part = linea.substr(start, end - start);
+                std::string path_part = line.substr(start, end - start);
                 loc.path = trim(path_part);
             }
             
@@ -90,10 +90,10 @@ static bool parseServer(std::ifstream& file, ServerConfig& server) {
         }
         
         // Quitar punto y coma
-        if (!linea.empty() && linea[linea.length() - 1] == ';')
-            linea = linea.substr(0, linea.length() - 1);
+        if (!line.empty() && line[line.length() - 1] == ';')
+            line = line.substr(0, line.length() - 1);
         
-        std::istringstream iss(linea);
+        std::istringstream iss(line);
         std::string key;
         iss >> key;
         
@@ -101,15 +101,15 @@ static bool parseServer(std::ifstream& file, ServerConfig& server) {
             std::string port_str;
             if (iss >> port_str) {
                 // Validar que sea un número
-                bool es_numero = true;
+                bool is_number = true;
                 for (size_t i = 0; i < port_str.length(); i++) {
                     if (!isdigit(port_str[i])) {
-                        es_numero = false;
+                        is_number = false;
                         break;
                     }
                 }
                 
-                if (!es_numero) {
+                if (!is_number) {
                     server.port = -1; // Marcar como inválido
                 } else {
                     server.port = atoi(port_str.c_str());
@@ -204,40 +204,40 @@ static bool parseServer(std::ifstream& file, ServerConfig& server) {
 }
 
 // Función principal para leer el archivo de configuración
-std::vector<ServerConfig> leerConfig(const char* archivo) {
+std::vector<ServerConfig> readConfig(const char* file) {
     std::vector<ServerConfig> servers;
-    std::ifstream file(archivo);
+    std::ifstream infile(file);
     
-    if (!file.is_open()) {
+    if (!infile.is_open()) {
         std::cerr << ERROR_NO_CARGAR << std::endl;
         return servers;
     }
     
-    std::string linea;
-    bool dentro_http = false;
-    bool encontrado_http = false;
+    std::string line;
+    bool inside_http = false;
+    bool found_http = false;
     size_t http_client_max_body_size = 1048576; // Default 1MB
     
-    while (std::getline(file, linea)) {
-        linea = trim(linea);
+    while (std::getline(infile, line)) {
+        line = trim(line);
         
-        if (linea.empty() || linea[0] == '#')
+        if (line.empty() || line[0] == '#')
             continue;
         
         // Detectar bloque http
-        if (linea.find("http") == 0) {
-            dentro_http = true;
-            encontrado_http = true;
+        if (line.find("http") == 0) {
+            inside_http = true;
+            found_http = true;
             continue;
         }
         
         // Parsear directivas a nivel http
-        if (dentro_http && linea.find("server") != 0 && linea.find("}") != 0) {
+        if (inside_http && line.find("server") != 0 && line.find("}") != 0) {
             // Quitar punto y coma
-            if (!linea.empty() && linea[linea.length() - 1] == ';')
-                linea = linea.substr(0, linea.length() - 1);
+            if (!line.empty() && line[line.length() - 1] == ';')
+                line = line.substr(0, line.length() - 1);
             
-            std::istringstream iss(linea);
+            std::istringstream iss(line);
             std::string key;
             iss >> key;
             
@@ -310,9 +310,9 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
         }
         
         // Detectar bloque server dentro de http
-        if (dentro_http && linea.find("server") == 0) {
+        if (inside_http && line.find("server") == 0) {
             ServerConfig server;
-            if (parseServer(file, server)) {
+            if (parseServer(infile, server)) {
                 // Aplicar client_max_body_size del nivel http si no está configurado en server
                 if (server.client_max_body_size == 1048576) {
                     server.client_max_body_size = http_client_max_body_size;
@@ -322,15 +322,15 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
         }
         
         // Fin del bloque http
-        if (linea == "}" && dentro_http) {
-            dentro_http = false;
+        if (line == "}" && inside_http) {
+            inside_http = false;
         }
     }
     
-    file.close();
+    infile.close();
     
     // Validar que existe bloque http
-    if (!encontrado_http) {
+    if (!found_http) {
         std::cerr << ERROR_NO_CARGAR << std::endl;
         servers.clear();
         return servers;
@@ -344,15 +344,15 @@ std::vector<ServerConfig> leerConfig(const char* archivo) {
     
     // Validar cada servidor
     for (size_t i = 0; i < servers.size(); i++) {
-        bool tiene_error = false;
+        bool has_error = false;
         
         // Validar listen (port)
         if (servers[i].port <= 0 || servers[i].port > 65535) {
-            tiene_error = true;
+            has_error = true;
         }
         
         // Si hay algún error en este servidor, mostrar mensaje y retornar vacío
-        if (tiene_error) {
+        if (has_error) {
             std::cerr << ERROR_NO_CARGAR << std::endl;
             servers.clear();
             return servers;

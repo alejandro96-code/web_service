@@ -15,16 +15,16 @@
 class FileUtils {
 public:
     // Leer el contenido completo de un archivo
-    static std::string leerArchivo(const std::string& ruta);
+    static std::string readFile(const std::string& path);
     
     // Verificar si una ruta corresponde a un directorio
-    static bool esDirectorio(const std::string& ruta);
+    static bool isDirectory(const std::string& path);
     
     // Obtener el Content-Type MIME según la extensión del archivo
-    static std::string obtenerContentType(const std::string& extension);
+    static std::string getContentType(const std::string& extension);
     
     // Normalizar un path eliminando barras duplicadas y asegurando formato correcto
-    static std::string normalizarPath(const std::string& path);
+    static std::string normalizePath(const std::string& path);
 };
 
 #endif

@@ -16,14 +16,14 @@
 class LocationMatcher {
 public:
     // Obtener la location que mejor coincide con el path dado
-    static Location* obtenerLocation(const std::string& path, std::vector<Location>& locations);
+    static Location* getLocation(const std::string& path, std::vector<Location>& locations);
     
     // Verificar si un método HTTP está permitido para la ruta
-    static bool metodoPermitido(const std::string& path, const std::string& method, 
+    static bool isMethodAllowed(const std::string& path, const std::string& method, 
                                 std::vector<Location>& locations);
     
     // Verificar si autoindex está activado para la ruta
-    static bool tieneAutoindex(const std::string& path, std::vector<Location>& locations);
+    static bool hasAutoindex(const std::string& path, std::vector<Location>& locations);
 };
 
 #endif

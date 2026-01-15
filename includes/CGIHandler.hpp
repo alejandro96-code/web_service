@@ -19,13 +19,13 @@
 class CGIHandler {
 public:
     // Verificar si un archivo es CGI basándose en su extensión
-    static bool esCGI(const std::string& path);
+    static bool isCGI(const std::string& path);
     
     // Obtener la ruta del intérprete según la extensión
-    static std::string obtenerInterpreterPath(const std::string& extension);
+    static std::string getInterpreterPath(const std::string& extension);
     
     // Ejecutar script CGI usando fork + pipe + execve
-    static std::string ejecutarCGI(const std::string& scriptPath, const Request& request);
+    static std::string executeCGI(const std::string& scriptPath, const Request& request);
 };
 
 #endif

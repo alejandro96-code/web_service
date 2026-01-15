@@ -16,20 +16,20 @@
     (quitariamos permisos a archivosSubidos)
     Si todo funcion a bien, leeremos el template y devolveremos un 200
 */
-void Response::manejarDELETE(const Request& request)
+void Response::handleDELETE(const Request& request)
 {
     std::string path = request.getPath();
     
     if (path.find("/autoindex/") == 0)
     {
-        std::string rutaCompleta = _documentRoot + path;
+        std::string fullPath = _documentRoot + path;
 
-        std::ifstream checkFile(rutaCompleta.c_str());
+        std::ifstream checkFile(fullPath.c_str());
         if (!checkFile.is_open())
         {
             _statusCode = HttpStatus::NOT_FOUND;
             _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                 _statusCode, _statusMessage, _errorPages);
             _body = errorResp.body;
             _headers["Content-Type"] = errorResp.contentType;
@@ -37,20 +37,20 @@ void Response::manejarDELETE(const Request& request)
         }
         checkFile.close();
         
-        if (FileUtils::esDirectorio(rutaCompleta)) {
+        if (FileUtils::isDirectory(fullPath)) {
             _statusCode = HttpStatus::FORBIDDEN;
             _statusMessage = HttpStatus::getMessage(HttpStatus::FORBIDDEN);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                 _statusCode, _statusMessage, _errorPages);
             _body = errorResp.body;
             _headers["Content-Type"] = errorResp.contentType;
             return;
         }
         
-        if (remove(rutaCompleta.c_str()) != 0) {
+        if (remove(fullPath.c_str()) != 0) {
             _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
             _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                 _statusCode, _statusMessage, _errorPages);
             _body = errorResp.body;
             _headers["Content-Type"] = errorResp.contentType;
@@ -71,7 +71,7 @@ void Response::manejarDELETE(const Request& request)
     else {
         _statusCode = HttpStatus::FORBIDDEN;
         _statusMessage = HttpStatus::getMessage(HttpStatus::FORBIDDEN);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;

@@ -9,9 +9,9 @@
     usando un stringstream y lo devuelve como string.
     Si el archivo no existe o no se puede abrir, devuelve string vacío.
 */
-std::string FileUtils::leerArchivo(const std::string& ruta)
+std::string FileUtils::readFile(const std::string& path)
 {
-    std::ifstream file(ruta.c_str());
+    std::ifstream file(path.c_str());
     if (!file.is_open()) {
         return "";
     }
@@ -27,10 +27,10 @@ std::string FileUtils::leerArchivo(const std::string& ruta)
     Luego usa la macro S_ISDIR() para verificar si es un directorio.
     Retorna false si hay error o no es directorio.
 */
-bool FileUtils::esDirectorio(const std::string& ruta)
+bool FileUtils::isDirectory(const std::string& path)
 {
     struct stat info;
-    if (stat(ruta.c_str(), &info) != 0) {
+    if (stat(path.c_str(), &info) != 0) {
         return false;
     }
     return S_ISDIR(info.st_mode);
@@ -42,7 +42,7 @@ bool FileUtils::esDirectorio(const std::string& ruta)
     Soporta los tipos más comunes de archivos web.
     Si la extensión no se reconoce, devuelve "application/octet-stream" (binario genérico).
 */
-std::string FileUtils::obtenerContentType(const std::string& extension)
+std::string FileUtils::getContentType(const std::string& extension)
 {
     if (extension == ".html" || extension == ".htm") return "text/html";
     if (extension == ".css") return "text/css";
@@ -61,32 +61,32 @@ std::string FileUtils::obtenerContentType(const std::string& extension)
     Asegura que el path siempre empiece con '/'.
     Ejemplo: "//path///to//file" -> "/path/to/file"
 */
-std::string FileUtils::normalizarPath(const std::string& path)
+std::string FileUtils::normalizePath(const std::string& path)
 {
     if (path.empty()) {
         return "/";
     }
     
-    std::string resultado;
-    resultado.reserve(path.length());
+    std::string result;
+    result.reserve(path.length());
     
-    bool ultimaFueBarra = false;
+    bool lastWasSlash = false;
     for (size_t i = 0; i < path.length(); i++) {
         if (path[i] == '/') {
-            if (!ultimaFueBarra) {
-                resultado += '/';
-                ultimaFueBarra = true;
+            if (!lastWasSlash) {
+                result += '/';
+                lastWasSlash = true;
             }
         } else {
-            resultado += path[i];
-            ultimaFueBarra = false;
+            result += path[i];
+            lastWasSlash = false;
         }
     }
     
     // Asegurar que empiece con /
-    if (resultado.empty() || resultado[0] != '/') {
-        resultado = "/" + resultado;
+    if (result.empty() || result[0] != '/') {
+        result = "/" + result;
     }
     
-    return resultado;
+    return result;
 }

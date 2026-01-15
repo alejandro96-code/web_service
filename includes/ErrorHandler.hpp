@@ -24,18 +24,18 @@ public:
     };
     
     // Generar una respuesta de error completa
-    static ErrorResponse generarRespuestaError(
-        int codigo,
+    static ErrorResponse generateErrorResponse(
+        int code,
         const std::string& statusMessage,
         const std::map<int, std::string>& errorPages
     );
     
 private:
     // Cargar página de error personalizada desde archivo
-    static std::string cargarPaginaError(const std::string& rutaArchivo);
+    static std::string loadErrorPage(const std::string& filePath);
     
     // Generar página de error HTML genérica
-    static std::string generarErrorGenerico(int codigo, const std::string& statusMessage);
+    static std::string generateGenericError(int code, const std::string& statusMessage);
 };
 
 #endif

@@ -12,8 +12,8 @@
     - Si la ruta empieza con '/', se considera absoluta desde la raíz del proyecto
     - Si no, es relativa (templates/ o html/)
 */
-ErrorHandler::ErrorResponse ErrorHandler::generarRespuestaError(
-    int codigo,
+ErrorHandler::ErrorResponse ErrorHandler::generateErrorResponse(
+    int code,
     const std::string& statusMessage,
     const std::map<int, std::string>& errorPages)
 {
@@ -21,28 +21,28 @@ ErrorHandler::ErrorResponse ErrorHandler::generarRespuestaError(
     response.contentType = "text/html";
     
     // Buscar página de error personalizada
-    std::map<int, std::string>::const_iterator it = errorPages.find(codigo);
+    std::map<int, std::string>::const_iterator it = errorPages.find(code);
     if (it != errorPages.end()) {
         // Si la ruta no empieza con '/', es relativa al documentRoot
-        std::string rutaError;
+        std::string errorPath;
         if (it->second[0] == '/') {
             // Ruta absoluta desde la raíz del proyecto
-            rutaError = it->second.substr(1); // Quitar el '/' inicial
+            errorPath = it->second.substr(1); // Quitar el '/' inicial
         } else {
             // Ruta relativa (puede estar en templates/ o html/)
-            rutaError = it->second;
+            errorPath = it->second;
         }
         
-        std::string contenido = cargarPaginaError(rutaError);
+        std::string content = loadErrorPage(errorPath);
         
-        if (!contenido.empty()) {
-            response.body = contenido;
+        if (!content.empty()) {
+            response.body = content;
             return response;
         }
     }
     
     // Si no hay página personalizada o falló la carga, generar error genérico
-    response.body = generarErrorGenerico(codigo, statusMessage);
+    response.body = generateGenericError(code, statusMessage);
     return response;
 }
 
@@ -52,9 +52,9 @@ ErrorHandler::ErrorResponse ErrorHandler::generarRespuestaError(
     Usa FileUtils para la lectura del archivo.
     Retorna string vacío si el archivo no existe o no se puede leer.
 */
-std::string ErrorHandler::cargarPaginaError(const std::string& rutaArchivo)
+std::string ErrorHandler::loadErrorPage(const std::string& filePath)
 {
-    return FileUtils::leerArchivo(rutaArchivo);
+    return FileUtils::readFile(filePath);
 }
 
 /*
@@ -65,9 +65,9 @@ std::string ErrorHandler::cargarPaginaError(const std::string& rutaArchivo)
     Formato:
     <html><body><h1>404 - Not Found</h1></body></html>
 */
-std::string ErrorHandler::generarErrorGenerico(int codigo, const std::string& statusMessage)
+std::string ErrorHandler::generateGenericError(int code, const std::string& statusMessage)
 {
     std::ostringstream html;
-    html << "<html><body><h1>" << codigo << " - " << statusMessage << "</h1></body></html>";
+    html << "<html><body><h1>" << code << " - " << statusMessage << "</h1></body></html>";
     return html.str();
 }

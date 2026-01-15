@@ -31,6 +31,6 @@ struct ServerConfig {
 };
 
 // Función para leer el archivo de configuración estilo NGINX
-std::vector<ServerConfig> leerConfig(const char* archivo);
+std::vector<ServerConfig> readConfig(const char* file);
 
 #endif

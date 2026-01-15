@@ -10,7 +10,7 @@
 */
 
 // Verificar si un archivo es CGI basándose en su extensión
-bool CGIHandler::esCGI(const std::string& path)
+bool CGIHandler::isCGI(const std::string& path)
 {
     size_t dotPos = path.find_last_of('.');
     if (dotPos == std::string::npos) {
@@ -22,7 +22,7 @@ bool CGIHandler::esCGI(const std::string& path)
 }
 
 // Obtener la ruta del intérprete según la extensión
-std::string CGIHandler::obtenerInterpreterPath(const std::string& extension)
+std::string CGIHandler::getInterpreterPath(const std::string& extension)
 {
     if (extension == ".php") {
         // Intentar múltiples rutas posibles para PHP
@@ -51,7 +51,7 @@ std::string CGIHandler::obtenerInterpreterPath(const std::string& extension)
 }
 
 // Ejecutar script CGI usando fork + pipe + execve
-std::string CGIHandler::ejecutarCGI(const std::string& scriptPath, const Request& request)
+std::string CGIHandler::executeCGI(const std::string& scriptPath, const Request& request)
 {
     // Obtener extensión y verificar intérprete
     size_t dotPos = scriptPath.find_last_of('.');
@@ -60,7 +60,7 @@ std::string CGIHandler::ejecutarCGI(const std::string& scriptPath, const Request
     }
     
     std::string extension = scriptPath.substr(dotPos);
-    std::string interpreterPath = obtenerInterpreterPath(extension);
+    std::string interpreterPath = getInterpreterPath(extension);
     
     if (interpreterPath.empty()) {
         std::cerr << "Intérprete no encontrado para " << extension << std::endl;

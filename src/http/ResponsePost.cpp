@@ -17,7 +17,7 @@
     La peticion ya se ha completado asi que leemos el contenido de goodPost
     damos el codigo 201 a la peticion e imprimos el template de goodPost.
 */
-void Response::manejarPOST(const Request& request)
+void Response::handlePOST(const Request& request)
 {
     std::string path = request.getPath();
     
@@ -33,7 +33,7 @@ void Response::manejarPOST(const Request& request)
         {
             _statusCode = HttpStatus::BAD_REQUEST;
             _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                 _statusCode, _statusMessage, _errorPages);
             _body = errorResp.body;
             _headers["Content-Type"] = errorResp.contentType;
@@ -58,7 +58,7 @@ void Response::manejarPOST(const Request& request)
                     {
                         _statusCode = HttpStatus::BAD_REQUEST;
                         _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
-                        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                             _statusCode, _statusMessage, _errorPages);
                         _body = errorResp.body;
                         _headers["Content-Type"] = errorResp.contentType;
@@ -71,7 +71,7 @@ void Response::manejarPOST(const Request& request)
                 // Si es multipart pero no hay filename, es un POST inválido
                 _statusCode = HttpStatus::BAD_REQUEST;
                 _statusMessage = HttpStatus::getMessage(HttpStatus::BAD_REQUEST);
-                ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+                ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                     _statusCode, _statusMessage, _errorPages);
                 _body = errorResp.body;
                 _headers["Content-Type"] = errorResp.contentType;
@@ -83,12 +83,12 @@ void Response::manejarPOST(const Request& request)
         std::ostringstream filenameStream;
         filenameStream << "archivo_" << now << ".txt";
         
-        std::string rutaArchivo = _documentRoot + "/autoindex/archivosSubidos/" + filenameStream.str();
-        std::ofstream file(rutaArchivo.c_str(), std::ios::binary);
+        std::string filePath = _documentRoot + "/autoindex/archivosSubidos/" + filenameStream.str();
+        std::ofstream file(filePath.c_str(), std::ios::binary);
         if (!file.is_open()) {
             _statusCode = HttpStatus::INTERNAL_SERVER_ERROR;
             _statusMessage = HttpStatus::getMessage(HttpStatus::INTERNAL_SERVER_ERROR);
-            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+            ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
                 _statusCode, _statusMessage, _errorPages);
             _body = errorResp.body;
             _headers["Content-Type"] = errorResp.contentType;
@@ -111,7 +111,7 @@ void Response::manejarPOST(const Request& request)
     else {
         _statusCode = HttpStatus::NOT_FOUND;
         _statusMessage = HttpStatus::getMessage(HttpStatus::NOT_FOUND);
-        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generarRespuestaError(
+        ErrorHandler::ErrorResponse errorResp = ErrorHandler::generateErrorResponse(
             _statusCode, _statusMessage, _errorPages);
         _body = errorResp.body;
         _headers["Content-Type"] = errorResp.contentType;

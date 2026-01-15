@@ -7,14 +7,14 @@
 class Autoindex {
 public:
     // Generar HTML con listado de archivos del directorio
-    static std::string generarHTML(const std::string& rutaDirectorio, const std::string& rutaURL);
+    static std::string generateHTML(const std::string& directoryPath, const std::string& urlPath);
     
 private:
     // Verificar si una ruta es un directorio
-    static bool esDirectorio(const std::string& ruta);
+    static bool isDirectory(const std::string& path);
     
     // Obtener lista de archivos y directorios
-    static std::vector<std::string> listarDirectorio(const std::string& ruta);
+    static std::vector<std::string> listDirectory(const std::string& path);
 };
 
 #endif
