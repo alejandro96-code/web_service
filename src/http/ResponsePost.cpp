@@ -4,7 +4,6 @@
 #include <sstream>
 #include <ctime>
 
-// 
 /*
     Peticion POST:
     Se usa principalmente para enviar datos a un servidor para crear o actualizar un recurso.

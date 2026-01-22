@@ -56,22 +56,18 @@ void Request::parse(const std::string& rawRequest)
                 value = value.substr(1);
             }
             _headers[key] = value;
-            
-            // Detectar Transfer-Encoding: chunked
             if (key == "Transfer-Encoding" && value.find("chunked") != std::string::npos) {
                 _isChunked = true;
             }
         }
     }
     
-    // Leer el body (puede estar en formato chunked)
     std::string bodyLine;
     std::string rawBody;
     while (std::getline(stream, bodyLine)) {
         rawBody += bodyLine + "\n";
     }
     
-    // Si es chunked, decodificar
     if (_isChunked) {
         _body = decodeChunkedBody(rawBody);
     } else {
@@ -125,42 +121,51 @@ std::string Request::getHeader(const std::string& key) const {
 
 std::string Request::getBody() const {return _body;}
 
+/*
+    Buscar el fin de la línea del tamaño
+    Extraemos el tamaño del chunk (en hexadecimal)
+    Convertir de hexadecimal a decimal
+    Si el tamaño es 0, hemos llegado al último chunk
+    Posición del inicio de los datos
+    Verificar que no nos pasemos del límite
+    Extraemos los datos del chunk
+    Moverse al siguiente chunk (saltar datos + \r\n)
+*/
+
 std::string Request::decodeChunkedBody(const std::string& chunkedData)
 {
     std::string decoded;
     size_t pos = 0;
     
     while (pos < chunkedData.length()) {
-        // Buscar el fin de la línea del tamaño
+        
         size_t sizeEnd = chunkedData.find("\r\n", pos);
         if (sizeEnd == std::string::npos) {
-            break; // No hay más chunks válidos
+            break;
         }
         
-        // Extraer el tamaño del chunk (en hexadecimal)
+        
         std::string sizeStr = chunkedData.substr(pos, sizeEnd - pos);
         
-        // Convertir de hexadecimal a decimal
+        
         size_t chunkSize = 0;
         std::istringstream(sizeStr) >> std::hex >> chunkSize;
-        
-        // Si el tamaño es 0, hemos llegado al último chunk
+
         if (chunkSize == 0) {
             break;
         }
         
-        // Posición del inicio de los datos
-        size_t dataStart = sizeEnd + 2; // Saltar \r\n
+
+        size_t dataStart = sizeEnd + 2;
         
-        // Verificar que no nos pasemos del límite
+
         if (dataStart + chunkSize > chunkedData.length()) {
-            break; // Datos incompletos
+            break;
         }
         
-        // Extraer los datos del chunk
+
         decoded += chunkedData.substr(dataStart, chunkSize);
-        
-        // Moverse al siguiente chunk (saltar datos + \r\n)
+
         pos = dataStart + chunkSize + 2;
     }
     

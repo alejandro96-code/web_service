@@ -20,28 +20,20 @@ ErrorHandler::ErrorResponse ErrorHandler::generateErrorResponse(
     ErrorResponse response;
     response.contentType = "text/html";
     
-    // Buscar página de error personalizada
     std::map<int, std::string>::const_iterator it = errorPages.find(code);
     if (it != errorPages.end()) {
-        // Si la ruta no empieza con '/', es relativa al documentRoot
         std::string errorPath;
         if (it->second[0] == '/') {
-            // Ruta absoluta desde la raíz del proyecto
-            errorPath = it->second.substr(1); // Quitar el '/' inicial
+            errorPath = it->second.substr(1);
         } else {
-            // Ruta relativa (puede estar en templates/ o html/)
             errorPath = it->second;
         }
-        
         std::string content = loadErrorPage(errorPath);
-        
         if (!content.empty()) {
             response.body = content;
             return response;
         }
     }
-    
-    // Si no hay página personalizada o falló la carga, generar error genérico
     response.body = generateGenericError(code, statusMessage);
     return response;
 }
