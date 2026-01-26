@@ -1,0 +1,153 @@
+# ============================================
+# PRUEBAS GET
+# ============================================
+
+# GET básico - página principal
+curl http://localhost:8080/
+
+# GET - archivo HTML específico
+curl http://localhost:8080/index.html
+
+# GET - autoindex activado (puerto 8080)
+curl http://localhost:8080/autoindex/
+
+# GET - autoindex desactivado (puerto 8081)
+curl http://localhost:8081/autoindex/
+
+# GET - archivo dentro de autoindex
+curl http://localhost:8080/autoindex/carpeta2/archivo_1kb.txt
+
+# GET - archivo que no existe (404)
+curl http://localhost:8080/noexiste.html -i
+
+# ============================================
+# PRUEBAS POST
+# ============================================
+
+# POST - datos simples
+curl -X POST http://localhost:8080/autoindex -d "test=datos" -i
+
+# POST - con chunked encoding
+echo -e "5\r\nHello\r\n6\r\n World\r\n0\r\n\r\n" | curl -X POST http://localhost:8080/autoindex -H "Transfer-Encoding: chunked" -H "Content-Type: text/plain" --data-binary @- -i
+
+# POST - subir archivo pequeño (debe funcionar)
+curl -X POST http://localhost:8080/autoindex -F "file=@html/autoindex/carpeta2/archivo_1kb.txt" -i
+
+# POST - subir archivo de 5MB (debe funcionar)
+curl -X POST http://localhost:8080/autoindex -F "file=@html/autoindex/carpeta2/archivo_5mb.txt" -i
+
+# POST - subir archivo de 11MB (debe devolver 413)
+curl -X POST http://localhost:8080/autoindex -F "file=@html/autoindex/carpeta2/archivo_11mb.txt" -i
+
+# POST - body vacío (400 Bad Request)
+curl -X POST http://localhost:8080/autoindex -i
+
+# ============================================
+# PRUEBAS DELETE
+# ============================================
+
+# DELETE - eliminar archivo (primero crear uno para borrar)
+curl -X POST http://localhost:8080/autoindex -d "test=archivo_para_borrar" -i
+curl -X DELETE http://localhost:8080/autoindex/archivosSubidos/[nombre_del_archivo_creado] -i
+
+# ============================================
+# PRUEBAS DE REDIRECCIONES
+# ============================================
+
+# Redirección 301 (permanente) a /index.html
+curl http://localhost:8080/redirect -i
+
+# Redirección 302 (temporal) a Google
+curl http://localhost:8080/google -i
+
+# Seguir redirecciones automáticamente
+curl -L http://localhost:8080/redirect
+
+# ============================================
+# PRUEBAS DE MÉTODOS NO PERMITIDOS (405)
+# ============================================
+
+# GET en ruta que solo permite POST y DELETE (puerto 8082)
+curl -X GET http://localhost:8082/autoindex/ -i
+
+# POST donde no está permitido
+curl -X POST http://localhost:8080/index.html -i
+
+# ============================================
+# PRUEBAS DE MÉTODOS NO IMPLEMENTADOS (501)
+# ============================================
+
+# PUT (no implementado)
+curl -X PUT http://localhost:8080/ -i
+
+# PATCH (no implementado)
+curl -X PATCH http://localhost:8080/ -i
+
+# HEAD (no implementado)
+curl -X HEAD http://localhost:8080/ -i
+
+# ============================================
+# PRUEBAS CON MÚLTIPLES SERVIDORES
+# ============================================
+
+# Servidor 1 (8080) - autoindex ON
+curl http://localhost:8080/autoindex/ -i
+
+# Servidor 2 (8081) - autoindex OFF
+curl http://localhost:8081/autoindex/ -i
+
+# Servidor 3 (8082) - sin GET en /autoindex
+curl http://localhost:8082/autoindex/ -i
+
+# ============================================
+# PRUEBAS DE VALIDACIÓN client_max_body_size
+# ============================================
+
+# Verificar que 10M es el límite (debe funcionar)
+curl -X POST http://localhost:8080/autoindex -F "file=@html/autoindex/carpeta2/archivo_5mb.txt" --max-time 30 -i
+
+# Verificar que >10M devuelve 413
+curl -X POST http://localhost:8080/autoindex -F "file=@html/autoindex/carpeta2/archivo_11mb.txt" --max-time 30 -i | head -15
+
+# ============================================
+# PRUEBAS CON VERBOSE PARA VER HEADERS
+# ============================================
+
+# Ver todos los headers de la petición y respuesta
+curl -v http://localhost:8080/
+
+# Ver solo headers de respuesta
+curl -I http://localhost:8080/
+
+# ============================================
+# PRUEBAS DE RENDIMIENTO
+# ============================================
+
+# Múltiples peticiones simultáneas
+for i in {1..10}; do curl http://localhost:8080/ & done; wait
+
+# Medir tiempo de respuesta
+time curl http://localhost:8080/ > /dev/null
+
+# ============================================
+# PRUEBAS DE PÁGINAS DE ERROR
+# ============================================
+
+# 400 Bad Request
+curl "http://localhost:8080/ HTTP/1.1" -i
+
+# 403 Forbidden (si existe configuración)
+curl http://localhost:8080/forbidden -i
+
+# 404 Not Found
+curl http://localhost:8080/noexiste -i
+
+# 405 Method Not Allowed
+curl -X POST http://localhost:8080/index.html -i
+
+# 413 Payload Too Large
+curl -X POST http://localhost:8080/autoindex -F "file=@html/autoindex/carpeta2/archivo_11mb.txt" -i | head -20
+
+# 500 Internal Server Error (si se puede provocar)
+# 501 Not Implemented
+curl -X OPTIONS http://localhost:8080/ -i

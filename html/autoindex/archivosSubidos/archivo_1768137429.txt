@@ -1,6 +1,0 @@
-------WebKitFormBoundary5gB8mZDclylDWndy
-Content-Disposition: form-data; name="archivo"; filename="archivo_1kb.txt"
-Content-Type: text/plain
-
-a
-------WebKitFormBoundary5gB8mZDclylDWndy--
