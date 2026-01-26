@@ -1,6 +1,6 @@
 # Webserv
 
-*This project has been created as part of the 42 curriculum by alejanr2.*
+*This project has been created as part of the 42 curriculum by alejanr2, andefern*
 
 ## Description
 
@@ -37,29 +37,6 @@ The server is capable of:
 - Make
 - PHP-CGI (optional, for CGI support)
 - Python3 (optional, for CGI support)
-
-### Compilation
-
-```bash
-make
-```
-
-This will compile the project and generate the `webserv` executable.
-
-To clean object files:
-```bash
-make clean
-```
-
-To remove all compiled files:
-```bash
-make fclean
-```
-
-To recompile from scratch:
-```bash
-make re
-```
 
 ### Configuration
 
@@ -246,61 +223,40 @@ web_service/
 │   └── Autoindex.hpp             # Directory listing generator
 │
 ├── src/                          # Source files
-│   ├── core/                     # Core server logic
-│   │   └── server.cpp            # Server implementation
-│   │
-│   ├── http/                     # HTTP request/response handling
-│   │   ├── Request.cpp           # Request parsing
-│   │   ├── Response.cpp          # Base response class
-│   │   ├── ResponseGet.cpp       # GET method handler
-│   │   ├── ResponsePost.cpp      # POST method handler
-│   │   └── ResponseDelete.cpp    # DELETE method handler
-│   │
-│   ├── config/                   # Configuration parsing
-│   │   └── parseoConf.cpp        # Config file parser
-│   │
-│   ├── cgi/                      # CGI handling
-│   │   └── CGIHandler.cpp        # CGI execution and environment setup
-│   │
-│   └── utils/                    # Utility functions
-│       ├── FileUtils.cpp         # File operations
-│       ├── ErrorHandler.cpp      # Error page handling
-│       ├── LocationMatcher.cpp   # Location matching logic
-│       ├── HttpStatus.cpp        # HTTP status utilities
-│       └── Autoindex.cpp         # Directory listing generation
+├── core/                     # Core server logic
+│   └── server.cpp            # Server implementation
 │
-├── obj/                          # Compiled object files (generated)
-│   └── src/
-│       ├── core/
-│       ├── http/
-│       ├── config/
-│       ├── cgi/
-│       └── utils/
+├── http/                     # HTTP request/response handling
+│   ├── Request.cpp           # Request parsing
+│   ├── Response.cpp          # Base response class
+│   ├── ResponseGet.cpp       # GET method handler
+│   ├── ResponsePost.cpp      # POST method handler
+│   └── ResponseDelete.cpp    # DELETE method handler
 │
-└── infoProyecto/                 # Project information
-    ├── curl.text                 # cURL examples
-    └── infoconf.conf             # Configuration notes
+├── config/                   # Configuration parsing
+│   └── parseoConf.cpp        # Config file parser
+│
+├── cgi/                      # CGI handling
+│   └── CGIHandler.cpp        # CGI execution and environment setup
+│
+└── utils/                    # Utility functions
+    ├── FileUtils.cpp         # File operations
+    ├── ErrorHandler.cpp      # Error page handling
+    ├── LocationMatcher.cpp   # Location matching logic
+    ├── HttpStatus.cpp        # HTTP status utilities
+    └── Autoindex.cpp         # Directory listing generation
+
 ```
 
 ## Resources
 
-### HTTP Protocol & Web Servers
-- [RFC 2616 - HTTP/1.1](https://www.rfc-editor.org/rfc/rfc2616) - Official HTTP/1.1 specification
-- [RFC 3875 - CGI](https://www.rfc-editor.org/rfc/rfc3875) - Common Gateway Interface specification
-- [MDN HTTP Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP) - Comprehensive HTTP reference
-- [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/) - Socket programming tutorial
-- [NGINX Documentation](https://nginx.org/en/docs/) - Configuration reference and concepts
-
-### Technical Documentation
+- [RFC 2616 - HTTP/1.1](https://www.rfc-editor.org/rfc/rfc2616)
+- [RFC 3875 - CGI](https://www.rfc-editor.org/rfc/rfc3875)
+- [NGINX Documentation](https://nginx.org/en/docs/)
 - Linux `man` pages: `socket(2)`, `select(2)`, `recv(2)`, `send(2)`, `bind(2)`, `listen(2)`, `accept(2)`
 - [fcntl() - Non-blocking I/O](https://man7.org/linux/man-pages/man2/fcntl.2.html)
-- [TCP/IP Illustrated](https://www.pearson.com/en-us/subject-catalog/p/tcp-ip-illustrated-volume-1-the-protocols/P200000009556) - In-depth networking concepts
-
-### Tools & Testing
-- [cURL Documentation](https://curl.se/docs/) - Command-line HTTP client
-- [Siege Manual](https://www.joedog.org/siege-manual/) - Load testing tool
-- [Postman](https://www.postman.com/) - API testing platform
-- [Wireshark](https://www.wireshark.org/) - Network protocol analyzer
+- [CURL Documentation](https://curl.se/docs/)
+- [Siege Manual](https://nexolinux.com/siege-testeando-webs/)
 
 ### AI Usage
 
@@ -308,72 +264,14 @@ AI (GitHub Copilot) was used in this project for:
 
 1. **Code Translation**: Translating Spanish variable and function names to English while preserving Spanish comments for documentation purposes.
 
-2. **Documentation**: Generating comprehensive inline comments explaining complex logic, particularly in:
-   - HTTP request parsing and chunked encoding handling
-   - CGI environment variable setup
-   - Configuration file parsing
-   - Error handling strategies
-
-3. **Debugging Assistance**: Identifying and resolving issues related to:
+2. **Debugging Assistance**: Identifying and resolving issues related to:
    - Socket buffer management
    - Memory leaks in dynamic allocations
    - Edge cases in HTTP parsing
    - Select() timeout handling
 
-4. **Code Review**: Suggesting improvements for:
-   - Error handling consistency
-   - Resource cleanup in exception paths
-   - Configuration validation
-   - Response header formatting
-
-5. **Testing Strategy**: Designing test scenarios for:
+3. **Testing Strategy**: Designing test scenarios for:
    - Concurrent connection handling
    - Large file uploads
    - CGI script execution
    - Edge cases (empty requests, malformed headers, etc.)
-
-**Note**: All core logic, architecture decisions, and implementation were human-designed. AI was used as a productivity tool for code quality improvements, documentation, and identifying potential issues.
-
-## Technical Choices
-
-### Non-blocking I/O with select()
-- Chosen over threading for better resource efficiency
-- Allows handling hundreds of concurrent connections with a single process
-- Avoids complexity of thread synchronization
-
-### C++98 Standard
-- Project requirement for compatibility
-- Demonstrates understanding of pre-C++11 features
-- No use of STL algorithms, smart pointers, or modern features
-
-### NGINX-style Configuration
-- Industry-standard format that's familiar to web developers
-- Flexible and readable
-- Supports complex routing scenarios
-
-### CGI over FastCGI
-- Simpler implementation suitable for educational purposes
-- Demonstrates process creation and inter-process communication
-- Easier to debug and understand
-
-### Custom HTTP Parser
-- Full control over parsing logic
-- Better error handling and edge case management
-- Educational value in understanding the HTTP protocol
-
-## Known Limitations
-
-- HTTP/1.1 only (no HTTP/2 or HTTP/3 support)
-- No HTTPS/SSL support
-- No keep-alive connection support
-- Basic CGI only (no FastCGI or application server integration)
-- Limited to `select()` for I/O multiplexing (no epoll/kqueue)
-- Maximum file descriptors limited by `select()` (typically 1024)
-
-## Authors
-
-- **alejanr2** - [GitHub Profile](https://github.com/alejandro96-code)
-
-## License
-
-This project is part of the 42 School curriculum and follows the school's academic policies.
